@@ -1,4 +1,4 @@
-# mininote CLI
+# mininote client/cli gen
 
 A typed command-line client for the mininote RPC API. The whole client — typed
 request/response structs, RPC methods, and the Cobra command tree — is generated
