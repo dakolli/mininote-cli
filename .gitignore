@@ -1,0 +1,18 @@
+# Generated code — rebuilt from intro.json via `go generate ./...`
+cli/client/types.gen.go
+cli/client/methods.gen.go
+cli/cmd/commands.gen.go
+**/*.gen.go
+
+# Local build artifacts
+/mininote
+/cli/mininote
+
+# Scratch / diagnostic output
+cli/test_results
+cli/test_results.txt
+cli/route_audit.txt
+cli/integration_tests.txt
+
+# OS
+.DS_Store
