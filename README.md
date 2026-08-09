@@ -14,7 +14,7 @@ is exposed as a `mininote <service> <method>` command.
 ## Build & install
 
 ```sh
-git clone <this-repo> && cd <repo>/cli
+git clone https://github.com/dakolli/mininote-gen mininote-gen/cli
 
 go generate ./...          # rebuilds client/*.gen.go and cmd/commands.gen.go
 go install ./cmd/mininote  # installs `mininote` to $GOPATH/bin
