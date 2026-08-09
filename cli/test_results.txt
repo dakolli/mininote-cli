@@ -1,0 +1,14 @@
+=== RUN   TestIntegrationVoidReads
+--- PASS: TestIntegrationVoidReads (0.27s)
+=== RUN   TestIntegrationPageReads
+--- PASS: TestIntegrationPageReads (0.32s)
+=== RUN   TestIntegrationSearch
+--- PASS: TestIntegrationSearch (0.05s)
+=== RUN   TestIntegrationHistoryAndComments
+--- PASS: TestIntegrationHistoryAndComments (0.23s)
+=== RUN   TestIntegrationPageWriteRoundTrip
+--- PASS: TestIntegrationPageWriteRoundTrip (0.18s)
+=== RUN   TestIntegrationSessionOnlyBlocked
+--- PASS: TestIntegrationSessionOnlyBlocked (0.05s)
+PASS
+ok  	mininote.dev/cli/client	1.112s
