@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"mininote.dev/cli/gen/spec"
+	"github.com/dakolli/mininote-cli/gen/spec"
 )
 
 //go:embed templates/*.tmpl

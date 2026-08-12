@@ -1,6 +1,6 @@
 package main
 
-import "mininote.dev/cli/cmd"
+import "github.com/dakolli/mininote-cli/cmd"
 
 func main() {
 	cmd.Execute()

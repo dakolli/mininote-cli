@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"mininote.dev/cli/client"
+	"github.com/dakolli/mininote-cli/client"
 
 	"github.com/spf13/cobra"
 )
@@ -30,7 +30,7 @@ var (
 	flagCompact bool
 )
 
-//go:generate go run mininote.dev/cli/cmd/cmdgen -introspect https://mininote.ink/rpc/_introspect -forbidden ../../api-key-forbidden.txt
+//go:generate go run github.com/dakolli/mininote-cli/cmd/cmdgen -introspect https://mininote.ink/rpc/_introspect -forbidden ../../api-key-forbidden.txt
 
 func init() {
 	pf := rootCmd.PersistentFlags()

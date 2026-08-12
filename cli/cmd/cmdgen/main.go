@@ -21,7 +21,7 @@ import (
 	"text/template"
 	"unicode"
 
-	"mininote.dev/cli/gen/spec"
+	"github.com/dakolli/mininote-cli/gen/spec"
 )
 
 //go:embed commands.tmpl

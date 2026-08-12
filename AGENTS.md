@@ -1,7 +1,7 @@
 # AGENTS.md — mininote-gen
 
 You are working on `mininote-gen`, a Go repo that turns the mininote RPC API's introspection
-catalog (`intro.json`) into a **typed client library** (`mininote.dev/cli/client`) and a
+catalog (`intro.json`) into a **typed client library** (`github.com/dakolli/mininote-cli/client`) and a
 **full-surface CLI** (`mininote`). Think as a principal-level Go engineer who ships code
 generators: the generated code is deterministic, gofmt-clean, and never hand-edited — the
 spec is the source of truth, and the runtime that executes it is small, hand-written, and
@@ -18,7 +18,7 @@ deliberately boring.
 - **Not the backend.** There is no server here. This is a *client* of the mininote.ink JSON-RPC
   backend, and everything is driven by what the spec says. When the backend changes, `intro.json`
   must be re-captured before regeneration.
-- The module is `mininote.dev/cli`, nested one level down at `cli/` (the repo root holds
+- The module is `github.com/dakolli/mininote-cli`, nested one level down at `cli/` (the repo root holds
   `intro.json`, `.gitignore`, `README.md`). **The spec lives at the repo root; the module lives in
   `cli/`.** This asymmetry trips people up — see Gotchas.
 
@@ -28,7 +28,7 @@ deliberately boring.
 |---|---|---|
 | `intro.json` | API catalog (services/methods/types) | committed snapshot, **re-captured live on every `go generate`** |
 | `api-key-forbidden.txt` | `Service.method` routes pruned from the generated surface by default (data, not code) | committed snapshot, manually refreshed |
-| `cli/go.mod`, `cli/go.sum` | module `mininote.dev/cli`, Go 1.26.4, only dep: `spf13/cobra` | hand-written |
+| `cli/go.mod`, `cli/go.sum` | module `github.com/dakolli/mininote-cli`, Go 1.26.4, only dep: `spf13/cobra` | hand-written |
 | `cli/gen/gen.go` | client generator entrypoint (`gen`) | hand-written |
 | `cli/gen/spec/spec.go` | loads + normalizes `intro.json` into a Go-ready `Model` | hand-written |
 | `cli/gen/templates/*.tmpl` | `text/template` skeletons for types/methods | hand-written |
@@ -295,7 +295,7 @@ go test -run TestIntegration -v ./client/   # live; SKIPPED unless MININOTE_RPC_
 ## Relationship to the rest of the workspace
 
 - **mininote-tools** (Go CLI): consumes this module as a library — `import
-  "mininote.dev/cli/client"`. It resolves through the workspace `go.work` (which lists
+  "github.com/dakolli/mininote-cli/client"`. It resolves through the workspace `go.work` (which lists
   `./mininote-gen/cli` and `./mininote-tools`); `mininote-tools/go.mod` has **no `require` lines**,
   so it only builds inside the workspace. It uses `PageTree` + `PageGet` today and lists
   `WorkspaceForKey` / `PageListPrefix` / `PageUpsert` as planned. If you change generated client

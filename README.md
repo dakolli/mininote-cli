@@ -29,7 +29,7 @@ mininote-gen/
 ├── api-key-forbidden.txt    # data: Service.method routes pruned by default (see "Key-available surface")
 ├── .gitignore               # ignores **/*.gen.go (generated files are never committed)
 ├── README.md
-└── cli/                     # module root: go.mod (module mininote.dev/cli) + all Go code
+└── cli/                     # module root: go.mod (module github.com/dakolli/mininote-cli) + all Go code
     ├── client/              #   runtime + types.gen.go + methods.gen.go
     ├── cmd/                 #   cobra tree (commands.gen.go) + hand-written plumbing
     └── gen/                 #   the generators

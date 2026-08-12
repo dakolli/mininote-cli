@@ -1,4 +1,4 @@
-module mininote.dev/cli
+module github.com/dakolli/mininote-cli
 
 go 1.26.4
 
