@@ -11,16 +11,46 @@ is exposed as a `mininote <service> <method>` command.
 - [`intro.json`](intro.json) — the API catalog, committed at the repo root
   (the generators read it; generated `*.gen.go` files are gitignored)
 
+## Repository layout — read this first
+
+The repo has **two roots**, and this asymmetry trips people up:
+
+```
+mininote-gen/
+├── intro.json        # spec root: the API catalog (committed, hand-captured)
+├── .gitignore        # ignores **/*.gen.go (generated files are never committed)
+├── README.md
+└── cli/              # module root: go.mod (module mininote.dev/cli) + all Go code
+    ├── client/       #   runtime + types.gen.go + methods.gen.go
+    ├── cmd/          #   cobra tree (commands.gen.go) + hand-written plumbing
+    └── gen/          #   the generators
+```
+
+Every `go` command (`go generate`, `go build`, `go test`, `go install`,
+`go run`) must be run **from inside `cli/`** — the repo root has no `go.mod`,
+so Go cannot resolve the module from there (`go generate ./...` at the repo
+root fails with "directory prefix . does not contain modules listed in
+go.work or their selected dependencies"). The `//go:generate` directives run
+in their *file's* directory (`cli/client/`, `cli/cmd/`), which is why the
+relative spec path `../../intro.json` always resolves to the repo root from
+anywhere in the module.
+
+When this repo is used inside the `workspace_mininote` `go.work` (which lists
+`./mininote-gen/cli` and `./mininote-tools`), the same rule applies: run `go`
+commands from `cli/` — the repo root is still not a module.
+
 ## Build & install
 
 ```sh
-git clone https://github.com/dakolli/mininote-gen mininote-gen/cli
+git clone https://github.com/dakolli/mininote-gen
+cd mininote-gen/cli      # the Go module lives here, not at the repo root
 
-go generate ./...          # rebuilds client/*.gen.go and cmd/commands.gen.go
+go generate ./...          # rebuilds client/types.gen.go, client/methods.gen.go, cmd/commands.gen.go
 go install ./cmd/mininote  # installs `mininote` to $GOPATH/bin
 ```
 
-Or without installing: `go run ./cmd/mininote --help`.
+Or without installing: `go run ./cmd/mininote --help`. (All commands below
+assume you're inside `cli/`.)
 
 ## Quick start
 
@@ -72,12 +102,13 @@ cmd/cmdgen/   ──text/template──▶  cmd/commands.gen.go  (25 services ×
 
 The generators only emit types and method stubs; the runtime
 (`client/client.go`) is hand-written and handles the `{"args":…}` / `{"data":…}`
-envelopes, auth, and error decoding. Regenerate with `go generate ./...` — the
-output is deterministic and gofmt'd.
+envelopes, auth, and error decoding. Regenerate from inside `cli/` with
+`go generate ./...` — the output is deterministic and gofmt'd.
 
 ## Tests
 
 ```sh
+# from cli/
 go test ./...        # unit tests (httptest, no network)
 ```
 
