@@ -9,6 +9,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	_ "embed"
 	"flag"
 	"fmt"
@@ -27,13 +28,17 @@ import (
 var templateSrc string
 
 const (
-	defaultIn  = "../../intro.json"
-	defaultOut = "../commands.gen.go"
+	defaultIn     = "../../intro.json"
+	forbiddenName = "api-key-forbidden.txt"
+	defaultOut    = "../commands.gen.go"
 )
 
 func main() {
-	in := flag.String("in", defaultIn, "path to the intro.json spec file")
+	in := flag.String("in", defaultIn, "path to the intro.json spec file (passing it explicitly skips the live capture and uses the file as-is — the committed spec is a STALE offline fallback)")
 	out := flag.String("out", defaultOut, "output file for generated cobra commands")
+	introspect := flag.String("introspect", spec.DefaultIntrospectURL, "live spec capture URL; the captured spec is written to <repo root>/intro.json on every run")
+	forbidden := flag.String("forbidden", "", "path to api-key-forbidden.txt (default: <repo root>/api-key-forbidden.txt)")
+	full := flag.Bool("full", false, "skip forbidden-list pruning and generate the complete surface from the spec")
 	flag.Parse()
 
 	// The documented defaults are relative to cmd/ (where go:generate runs);
@@ -49,6 +54,19 @@ func main() {
 	if !flagSet("out") {
 		*out = filepath.Join(root, "cmd", "commands.gen.go")
 	}
+	if *forbidden == "" {
+		*forbidden = filepath.Join(filepath.Dir(root), forbiddenName)
+	}
+
+	// The spec is always re-captured live unless -in was passed explicitly: the
+	// committed intro.json is a stale fallback for offline builds only.
+	if flagSet("in") {
+		spec.StaleSpecWarning(*in)
+	} else {
+		if _, _, err := spec.CaptureSpec(context.Background(), *introspect, spec.SpecToken(), *in); err != nil {
+			log.Fatalf("capture spec from %s: %v (set MININOTE_ADMIN_AGENT_KEY or MININOTE_TOKEN)", *introspect, err)
+		}
+	}
 
 	s, err := spec.LoadSpec(*in)
 	if err != nil {
@@ -57,6 +75,20 @@ func main() {
 	model, err := spec.Normalize(s)
 	if err != nil {
 		log.Fatalf("normalize spec: %v", err)
+	}
+
+	if *full {
+		log.Printf("full surface requested (-full): skipping forbidden-list pruning")
+	} else {
+		forbiddenSet, err := spec.LoadForbidden(*forbidden)
+		if err != nil {
+			log.Printf("WARNING: cannot load forbidden list %s: %v — generating FULL surface (pass -full to silence)", *forbidden, err)
+		} else {
+			report := model.PruneForbidden(forbiddenSet)
+			log.Printf("forbidden list: %s", *forbidden)
+			log.Printf("prune summary: %s", report.String())
+			spec.WarnStale(report)
+		}
 	}
 
 	svcs, methods := buildServices(s, model)

@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-//go:generate go run mininote.dev/cli/gen -in ../../intro.json
+//go:generate go run mininote.dev/cli/gen -introspect https://mininote.ink/rpc/_introspect -forbidden ../../api-key-forbidden.txt
 
 // Client talks to a single mininote server over HTTP JSON-RPC.
 type Client struct {

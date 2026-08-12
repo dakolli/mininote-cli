@@ -1,0 +1,142 @@
+# api-key-forbidden.txt — RPC routes that API keys (mnk_...) cannot call.
+#
+# The generated client and CLI prune this surface by default so they expose only
+# what a bare API key can reach; `gen`/`cmdgen -full` restores everything the
+# introspect spec publishes. This file is a data snapshot (like intro.json), not
+# code: change it and regenerate to change the surface.
+#
+# Format: one `Service.method` per line (exact case — methods are mixed case,
+# e.g. Page.listPrefix). Blank lines and `#` comment lines are ignored.
+#
+# Seeded from the union of:
+#   - every route the server answers 403 FORBIDDEN for API keys (403routes.txt),
+#   - every Auth.* method (the client's sessionOnly map — key minting keys is
+#     privilege escalation), and
+#   - every Admin.* method (control plane, excluded wholesale).
+#
+# Refresh workflow: re-probe against a throwaway workspace with an API key
+# (POST {"args":{}} to each route; 403 = key-blocked), record the new routes,
+# regenerate. Never probe on real data. See README "Key-available surface".
+#
+Activity.favorite
+Activity.favorites
+Activity.recent
+Activity.reorderFavorites
+Activity.unfavorite
+Activity.view
+Admin.disableUser
+Admin.enableUser
+Admin.featureGrantees
+Admin.imageReports
+Admin.listAdmins
+Admin.listFeatures
+Admin.listUsers
+Admin.oauthMeta
+Admin.oauthProviderDelete
+Admin.oauthProviderList
+Admin.oauthProviderReorder
+Admin.oauthProviderUpsert
+Admin.resolveImageReport
+Admin.searchSpaces
+Admin.searchUsers
+Admin.setPlatformRole
+Admin.setSpaceFeature
+Admin.siteRouteSet
+Admin.siteRoutes
+Admin.stats
+Admin.userOverview
+Auth.changePassword
+Auth.confirmTwoFactor
+Auth.createAPIKey
+Auth.deleteAccount
+Auth.disableTwoFactor
+Auth.listAPIKeys
+Auth.listSessions
+Auth.listTrustedDevices
+Auth.login
+Auth.loginVerify
+Auth.logout
+Auth.me
+Auth.refresh
+Auth.regenerateRecoveryCodes
+Auth.register
+Auth.requestPasswordReset
+Auth.resetPassword
+Auth.revokeAPIKey
+Auth.revokeOtherSessions
+Auth.revokeSession
+Auth.revokeTrustedDevice
+Auth.rotateAPIKey
+Auth.setupTwoFactor
+Auth.twoFactorStatus
+Dashboard.get
+Dashboard.reset
+Dashboard.save
+Dashboard.setLocked
+Lock.acquire
+Lock.release
+Lock.status
+Notifications.clear
+Notifications.list
+Notifications.markRead
+Page.moveToWorkspace
+Page.resolveKey
+Page.usage
+Presence.leave
+Presence.ping
+Profile.get
+Profile.mine
+Profile.page
+Profile.saveBlocks
+Profile.search
+Profile.setMeta
+Profile.setVisibility
+Profile.shares
+Realtime.ticket
+Settings.get
+Settings.put
+Share.setExport
+Share.setRaw
+Share.siteRoute
+Srs.delete
+Srs.get
+Srs.set
+Template.create
+Template.delete
+Template.get
+Template.list
+Template.update
+Ticket.myWork
+Upload.delete
+Upload.deleteMany
+Upload.list
+Upload.prepare
+Upload.report
+Upload.setName
+Upload.status
+Workspace.acceptInvite
+Workspace.acceptInviteLink
+Workspace.cancelInvite
+Workspace.create
+Workspace.createInviteLink
+Workspace.createKey
+Workspace.declineInvite
+Workspace.delete
+Workspace.invite
+Workspace.invites
+Workspace.keysWithAccess
+Workspace.leave
+Workspace.list
+Workspace.listInviteLinks
+Workspace.listKeys
+Workspace.members
+Workspace.myInvites
+Workspace.previewInviteLink
+Workspace.removeMember
+Workspace.rename
+Workspace.revokeInviteLink
+Workspace.revokeKey
+Workspace.revokeKeyAccess
+Workspace.setColor
+Workspace.setKey
+Workspace.setRole

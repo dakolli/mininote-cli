@@ -30,7 +30,7 @@ var (
 	flagCompact bool
 )
 
-//go:generate go run mininote.dev/cli/cmd/cmdgen
+//go:generate go run mininote.dev/cli/cmd/cmdgen -introspect https://mininote.ink/rpc/_introspect -forbidden ../../api-key-forbidden.txt
 
 func init() {
 	pf := rootCmd.PersistentFlags()
@@ -44,7 +44,7 @@ func init() {
 	pf.BoolVar(&flagCompact, "compact", false, "single-line JSON output")
 
 	registerServiceCommands(rootCmd, getClient)
-	rootCmd.AddCommand(versionCmd, loginCmd, logoutCmd, whoamiCmd)
+	rootCmd.AddCommand(versionCmd, logoutCmd)
 }
 
 // getClient resolves the base URL and token from flags, config, and the

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"embed"
 	"flag"
 	"fmt"
@@ -18,16 +19,41 @@ import (
 var templates embed.FS
 
 const (
-	defaultIn = "../intro.json"
-	outTypes  = "types.gen.go"
-	outMethod = "methods.gen.go"
+	defaultIn      = "../intro.json"
+	introspectName = "intro.json"
+	forbiddenName  = "api-key-forbidden.txt"
+	outTypes       = "types.gen.go"
+	outMethod      = "methods.gen.go"
 )
 
 func main() {
-	in := flag.String("in", defaultIn, "path to the intro.json spec file")
+	in := flag.String("in", defaultIn, "path to the intro.json spec file (passing it explicitly skips the live capture and uses the file as-is — the committed spec is a STALE offline fallback)")
+	introspect := flag.String("introspect", spec.DefaultIntrospectURL, "live spec capture URL; the captured spec is written to <repo root>/intro.json on every run")
+	forbidden := flag.String("forbidden", "", "path to api-key-forbidden.txt (default: <repo root>/api-key-forbidden.txt)")
+	full := flag.Bool("full", false, "skip forbidden-list pruning and generate the complete surface from the spec")
 	typesOut := flag.String("types", "", fmt.Sprintf("output file for generated types (default: <module root>/client/%s)", outTypes))
 	methodsOut := flag.String("methods", "", fmt.Sprintf("output file for generated methods (default: <module root>/client/%s)", outMethod))
 	flag.Parse()
+
+	root, err := moduleRoot()
+	if err != nil {
+		log.Fatalf("find module root: %v", err)
+	}
+	if *forbidden == "" {
+		*forbidden = filepath.Join(filepath.Dir(root), forbiddenName)
+	}
+
+	// The spec is always re-captured live unless -in was passed explicitly: the
+	// committed intro.json is a stale fallback for offline builds only.
+	if flagSet("in") {
+		spec.StaleSpecWarning(*in)
+	} else {
+		specPath := filepath.Join(filepath.Dir(root), introspectName)
+		if _, _, err := spec.CaptureSpec(context.Background(), *introspect, spec.SpecToken(), specPath); err != nil {
+			log.Fatalf("capture spec from %s: %v (set MININOTE_ADMIN_AGENT_KEY or MININOTE_TOKEN)", *introspect, err)
+		}
+		*in = specPath
+	}
 
 	s, err := spec.LoadSpec(*in)
 	if err != nil {
@@ -38,10 +64,20 @@ func main() {
 		log.Fatalf("normalize spec: %v", err)
 	}
 
-	root, err := moduleRoot()
-	if err != nil {
-		log.Fatalf("find module root: %v", err)
+	if *full {
+		log.Printf("full surface requested (-full): skipping forbidden-list pruning")
+	} else {
+		forbiddenSet, err := spec.LoadForbidden(*forbidden)
+		if err != nil {
+			log.Printf("WARNING: cannot load forbidden list %s: %v — generating FULL surface (pass -full to silence)", *forbidden, err)
+		} else {
+			report := model.PruneForbidden(forbiddenSet)
+			log.Printf("forbidden list: %s", *forbidden)
+			log.Printf("prune summary: %s", report.String())
+			spec.WarnStale(report)
+		}
 	}
+
 	if *typesOut == "" {
 		*typesOut = filepath.Join(root, "client", outTypes)
 	}
@@ -80,6 +116,17 @@ func moduleRoot() (string, error) {
 		}
 		dir = parent
 	}
+}
+
+// flagSet reports whether the named flag was given on the command line.
+func flagSet(name string) bool {
+	set := false
+	flag.Visit(func(f *flag.Flag) {
+		if f.Name == name {
+			set = true
+		}
+	})
+	return set
 }
 
 // render executes the named template and writes gofmt-formatted output.

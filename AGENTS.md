@@ -9,9 +9,10 @@ deliberately boring.
 
 ## What this repo is
 
-- **A generator pipeline + a thin runtime.** `intro.json` (477KB, committed at the repo root) is a
-  snapshot of the `mininote/rpc/_introspect` route (the server's `introspect` plugin, opt-in). It
-  contains the full RPC surface: 25 services, 202 methods, 308 named types, `cross_refs`, and
+- **A generator pipeline + a thin runtime.** `intro.json` (committed at the repo root, **re-captured
+  live from `mininote/rpc/_introspect` on every `go generate`**) is the API catalog for the server's
+  `introspect` plugin. A live capture carries ~24 services / ~155 methods / ~256 named types (the route
+  redacts the control plane: no `Admin`, and `Auth` exposes only `me`), plus `cross_refs` and
   `boundary_warnings`. The generators read it and emit Go; a hand-written HTTP client provides the
   `{"args":…}`/`{"data":…}` envelope, auth, and error decoding that the generated code builds on.
 - **Not the backend.** There is no server here. This is a *client* of the mininote.ink JSON-RPC
@@ -25,17 +26,18 @@ deliberately boring.
 
 | File | Role | Generated? |
 |---|---|---|
-| `intro.json` | API catalog (services/methods/types) | committed snapshot, **hand-captured** |
+| `intro.json` | API catalog (services/methods/types) | committed snapshot, **re-captured live on every `go generate`** |
+| `api-key-forbidden.txt` | `Service.method` routes pruned from the generated surface by default (data, not code) | committed snapshot, manually refreshed |
 | `cli/go.mod`, `cli/go.sum` | module `mininote.dev/cli`, Go 1.26.4, only dep: `spf13/cobra` | hand-written |
 | `cli/gen/gen.go` | client generator entrypoint (`gen`) | hand-written |
 | `cli/gen/spec/spec.go` | loads + normalizes `intro.json` into a Go-ready `Model` | hand-written |
 | `cli/gen/templates/*.tmpl` | `text/template` skeletons for types/methods | hand-written |
 | `cli/cmd/cmdgen/main.go` | cobra command-tree generator (`cmdgen`) | hand-written |
 | `cli/client/client.go` | **runtime**: envelope, auth modes, `APIError` decoding | hand-written |
-| `cli/client/types.gen.go` | 308 typed structs | **generated, gitignored** |
-| `cli/client/methods.gen.go` | 202 RPC methods on `*Client` | **generated, gitignored** |
-| `cli/cmd/commands.gen.go` | 25 service commands × method subcommands | **generated, gitignored** |
-| `cli/cmd/root.go`, `config.go`, `auth.go`, `main.go` | cobra wiring, config file, hand-written login/logout/whoami | hand-written |
+| `cli/client/types.gen.go` | all spec types (never pruned) | **generated, gitignored** |
+| `cli/client/methods.gen.go` | RPC methods on `*Client` (key-available only by default; `-full` for everything) | **generated, gitignored** |
+| `cli/cmd/commands.gen.go` | service commands × method subcommands (key-available services by default) | **generated, gitignored** |
+| `cli/cmd/root.go`, `config.go`, `auth.go`, `main.go` | cobra wiring, config file, hand-written `logout` | hand-written |
 | `cli/cmd/mininote/main.go` | `func main() { cmd.Execute() }` | hand-written |
 | `cli/client/client_test.go` | httptest unit tests (no network) | hand-written |
 | `cli/client/integration_test.go` | live tests, skipped unless `MININOTE_RPC_KEY` set | hand-written |
@@ -48,18 +50,21 @@ deliberately boring.
 - **Hand-written:** the runtime (`client/client.go`), the spec normalizer (`gen/spec/spec.go`), the
   generators, and the CLI plumbing. This is where all real logic lives.
 - The `//go:generate` directives are attached to the *hand-written* files they regenerate:
-  `client/client.go#L18` (`gen -in ../../intro.json`) and `cmd/root.go#L33` (`cmdgen`). Running
+  `client/client.go#L18` and `cmd/root.go#L33` — both now run with
+  `-introspect https://mininote.ink/rpc/_introspect -forbidden ../../api-key-forbidden.txt`, so a bare
+  `go generate ./...` re-captures the spec live, rewrites the repo-root `intro.json`, and prunes the
+  generated surface to the key-available routes (see the Gotchas entries below). Running
   `go generate ./...` from anywhere in the module rebuilds all three `.gen.go` files.
 
 ## Architecture: intro.json → text/template → .gen.go
 
 ```
-intro.json
-   │  gen.LoadSpec → spec.Normalize (spec.go)
+intro.json  (live capture: POST /rpc/_introspect → rewritten every go generate)
+   │  gen.LoadSpec → spec.Normalize → Model.PruneForbidden (api-key-forbidden.txt)
    ▼
-gen/gen.go  ──types.gen.tmpl──▶  client/types.gen.go   (308 structs)
-   └────────methods.gen.tmpl──▶  client/methods.gen.go  (202 methods)
-cmd/cmdgen  ──commands.tmpl──▶  cmd/commands.gen.go    (25 services × methods)
+gen/gen.go  ──types.gen.tmpl──▶  client/types.gen.go   (all types — never pruned)
+   └────────methods.gen.tmpl──▶  client/methods.gen.go  (key-available methods by default)
+cmd/cmdgen  ──commands.tmpl──▶  cmd/commands.gen.go    (services with ≥1 surviving method)
 ```
 
 1. **`spec.LoadSpec` / `spec.Normalize`** (`cli/gen/spec/spec.go`): unmarshal `intro.json`, then
@@ -105,8 +110,8 @@ cmd/cmdgen  ──commands.tmpl──▶  cmd/commands.gen.go    (25 services ×
 ### Auth modes
 
 - **Session token:** `client.WithToken(t)` (`client.go#L94`). Sent as `Authorization: Bearer <t>`.
-  Can call every RPC. Stored by the hand-written `mininote login` into the config file
-  (`$XDG_CONFIG_HOME/mininote/cli.json`, 0600 — see `cmd/config.go`).
+  Can call every RPC. Tokens come from `--token`, the env, or the config file — there is no
+  hand-written `mininote login` to persist one (see below).
 - **API key (`mnk_...`):** `client.WithAPIKey(k)` (`client.go#L104`). The CLI auto-detects the
   `mnk_` prefix in `getClient` (`cmd/root.go#L62`). Keys are **folder/workspace-scoped** and can
   only reach content routes.
@@ -137,13 +142,15 @@ cmd/cmdgen  ──commands.tmpl──▶  cmd/commands.gen.go    (25 services ×
   URL env is `MININOTE_BASE_URL`, defaulting to `https://mininote.ink`.
 - `--compact` prints single-line JSON; default is `json.MarshalIndent` 2-space (`printResult`,
   `cmd/root.go#L131`). Every generated command accepts it via the root persistent flag.
-- Hand-written top-level commands: `login` (persists session), `logout`, `whoami`, `version`.
-  Note `mininote auth login` (generated, prints raw RPC result) is a *different* command from
-  `mininote login` (hand-written, persists to config).
+- Hand-written top-level commands: `logout` (clears the stored token from the config file — it
+  makes no RPC call) and `version`. There is **no** `mininote login` or `mininote whoami`, and no
+  generated `auth` service: Auth RPCs are session-only and redacted from the live introspect route,
+  and the generated client is strictly key-available by design, so no command can reach them.
 
 ## The CLI surface & what's in the responses
 
-- 25 services, 202 methods, one command per method: `mininote <service> <method> [flags]`. Run
+- The pruned surface is ~77 methods across the remaining services (exact counts vary per capture): one
+  command per key-available method: `mininote <service> <method> [flags]`. Run
   `mininote --help` for the list, `mininote <service> --help` for methods, `mininote <service>
   <method> --help` for flags.
 - Service/method name mapping is verbatim spec (`page listPrefix`, `search query`,
@@ -197,18 +204,21 @@ go test -run TestIntegration -v ./client/   # live; SKIPPED unless MININOTE_RPC_
 ```
 
 - `go generate` runs each `//go:generate` line in its **file's directory** (client/ and cmd/), so
-  the relative spec path `../../intro.json` always resolves to the repo root — that's why the
-  directives work from anywhere in the module.
+  the relative `-forbidden ../../api-key-forbidden.txt` always resolves to the repo root — that's
+  why the directives work from anywhere in the module. The spec itself is captured live; the repo-root
+  `intro.json` is rewritten every run (auth from `MININOTE_ADMIN_AGENT_KEY`, then `MININOTE_RPC_KEY`,
+  then `MININOTE_TOKEN`).
 - The unit tests (`client_test.go`) spin up an `httptest.Server` and assert the exact request body
   (`{"args":{...}}`), the `Bearer` header, envelope decoding, and that the client-side
   session-only block returns 403 without a network call (`TestSessionOnlyBlockedForAPIKey`).
 - Integration tests (`integration_test.go`) hit the real server when `MININOTE_RPC_KEY` is set.
   `TestIntegrationPageWriteRoundTrip` creates and deletes a page (cleanup via `t.Cleanup`), so it
   is safe to run, but it does touch real state — don't run with a production key you don't own.
-- **Workflow when the API changes:** re-capture `intro.json` from the server's `/_introspect`
-  route, regenerate, run `go test ./...`, then `go install`. Generated output is deterministic and
-  gofmt'd, so diffs in `.gen.go` files are meaningful (though they're gitignored, so review the
-  template/spec changes instead).
+- **Workflow when the API changes:** `go generate ./...` re-captures `intro.json` from the server's
+  `/_introspect` route automatically, prunes to the key-available surface, and prints the prune summary
+  (watch for stale-entry warnings and count drift — that is the drift alarm). Then `go test ./...`, then
+  `go install`. Generated output is deterministic and gofmt'd, so diffs in `.gen.go` files are
+  meaningful (though they're gitignored, so review the template/spec changes instead).
 
 ## Conventions
 
@@ -257,9 +267,21 @@ go test -run TestIntegration -v ./client/   # live; SKIPPED unless MININOTE_RPC_
   bounce with 403. This is by design; the client list exists to fail fast on auth-only routes.
 - **`mnk_` prefix detection is the API-key switch.** A token that starts with `mnk_` puts the
   client in API-key mode (`cmd/root.go#L62`). Don't create keys with that prefix for sessions.
-- **`intro.json` is a snapshot.** It was captured from a specific server state; a re-captured file
-  can be larger/newer (a newer 741KB snapshot exists in `~/.config/mininote/intro.json`). The
-  committed one is the source of truth for this repo until deliberately updated.
+- **`intro.json` is re-captured live on every generation — never trust the committed copy.** The `//go:generate`
+  directives run `gen`/`cmdgen` with `-introspect https://mininote.ink/rpc/_introspect`, which POSTs `{}`
+  (bearer auth from `MININOTE_ADMIN_AGENT_KEY`, then `MININOTE_RPC_KEY`, then `MININOTE_TOKEN`) and rewrites
+  the repo-root `intro.json` before building the model. The committed file is a fallback **only** for explicit
+  `-in <file>` use / offline builds, and prints a loud `STALE SPEC` warning then. The introspection route
+  redacts the control plane (no `Admin` service; `Auth` exposes only `me`), so a fresh capture has fewer
+  methods than the old full 202-method snapshots.
+- **`api-key-forbidden.txt` is a snapshot, refreshed manually.** It lists the `Service.method` routes the
+  generated client/CLI prune by default (API keys cannot call them: server 403s, session-only `Auth/*`, and
+  all `Admin/*`). Every generation prints a prune summary (`kept N/M methods (pruned P); S services fully
+  removed`) plus a loud warning for stale entries (forbidden routes matching no method in the current spec).
+  `Admin.*` and session-only `Auth.*` entries are *expected-stale* (the introspect route redacts them); any
+  other stale entry means spec or list drift. Refresh by re-probing **against a throwaway workspace** with an
+  API key (`POST {"args":{}}` to each route; 403 = key-blocked), never real data — see README
+  "Key-available surface". `gen`/`cmdgen -full` skips the prune entirely.
 - **Empty `cross_refs`:** the `cross_refs` top-level key exists but is `{}` — the generators ignore
   it. Don't rely on it for anything yet.
 - **`boundary_warnings`:** one entry — `"type "Page" is returned by 2 services (History, Page) —

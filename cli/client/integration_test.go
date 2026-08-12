@@ -160,14 +160,21 @@ func TestIntegrationSessionOnlyBlocked(t *testing.T) {
 	c := newIntegrationClient(t)
 	ctx := context.Background()
 
-	// Client-side guard: control-plane RPCs from the session-only set.
-	_, err := c.AuthMe(ctx)
-	assertAPIError(t, err, "AuthMe must be blocked for API keys")
+	// Client-side guard: sessionOnly routes are rejected before any request is
+	// sent. The generated client is strictly key-available, so no generated
+	// method targets these routes; the guard is exercised through the unexported
+	// do path.
+	var resp any
+	err := c.do(ctx, "/rpc/Auth/login", struct{}{}, &resp)
+	assertAPIError(t, err, "Auth.login must be blocked for API keys")
 
-	// Server-side enforcement: key-reachable surface is narrower than the full
-	// RPC catalog, so the server rejects these too (proves live error parsing).
-	_, err = c.SettingsGet(ctx)
-	assertAPIError(t, err, "SettingsGet must be rejected for API keys")
+	// Server-side 403 enforcement for the rest of the control-plane surface is
+	// captured at generation time in api-key-forbidden.txt (the pruned client
+	// never sends those requests). The surviving surface must be callable with
+	// a bare API key:
+	if _, err := c.WorkspaceForKey(ctx); err != nil {
+		t.Fatalf("WorkspaceForKey with API key should succeed: %v", err)
+	}
 }
 
 func assertAPIError(t *testing.T, err error, msg string) {
