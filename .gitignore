@@ -1,9 +1,3 @@
-# Generated code — rebuilt from intro.json via `go generate ./...`
-cli/client/types.gen.go
-cli/client/methods.gen.go
-cli/cmd/commands.gen.go
-**/*.gen.go
-
 # Local build artifacts
 /mininote
 /cli/mininote
