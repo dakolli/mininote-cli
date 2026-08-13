@@ -10,10 +10,7 @@ dist/
 # Locally built binary
 mininote
 
-# Generator inputs — these live on disk but are not published.
-# intro.json is re-captured live on every `go generate` from the server's
-# introspection route. api-key-forbidden.txt is a manually curated list of
-# routes to prune from the generated surface. Both are internal to the
-# generation pipeline and not needed to build from source.
+# Internal dev docs & generator inputs (never published)
+AGENTS.md
 intro.json
 api-key-forbidden.txt
