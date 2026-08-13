@@ -22,6 +22,9 @@ var (
 		// Execute); cobra should not double-print or dump usage on failure.
 		SilenceErrors: true,
 		SilenceUsage:  true,
+		// The CLI is a 1:1 RPC surface; cobra's auto-generated `completion`
+		// command is not part of it.
+		CompletionOptions: cobra.CompletionOptions{DisableDefaultCmd: true},
 	}
 
 	flagBaseURL string
@@ -44,7 +47,7 @@ func init() {
 	pf.BoolVar(&flagCompact, "compact", false, "single-line JSON output")
 
 	registerServiceCommands(rootCmd, getClient)
-	rootCmd.AddCommand(versionCmd, logoutCmd)
+	rootCmd.AddCommand(versionCmd)
 }
 
 // getClient resolves the base URL and token from flags, config, and the

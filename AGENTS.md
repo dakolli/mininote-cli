@@ -37,7 +37,7 @@ deliberately boring.
 | `cli/client/types.gen.go` | all spec types (never pruned) | **generated, gitignored** |
 | `cli/client/methods.gen.go` | RPC methods on `*Client` (key-available only by default; `-full` for everything) | **generated, gitignored** |
 | `cli/cmd/commands.gen.go` | service commands × method subcommands (key-available services by default) | **generated, gitignored** |
-| `cli/cmd/root.go`, `config.go`, `auth.go`, `main.go` | cobra wiring, config file, hand-written `logout` | hand-written |
+| `cli/cmd/root.go`, `config.go`, `main.go` | cobra wiring, config file | hand-written |
 | `cli/cmd/mininote/main.go` | `func main() { cmd.Execute() }` | hand-written |
 | `cli/client/client_test.go` | httptest unit tests (no network) | hand-written |
 | `cli/client/integration_test.go` | live tests, skipped unless `MININOTE_RPC_KEY` set | hand-written |
@@ -142,10 +142,11 @@ cmd/cmdgen  ──commands.tmpl──▶  cmd/commands.gen.go    (services with 
   URL env is `MININOTE_BASE_URL`, defaulting to `https://mininote.ink`.
 - `--compact` prints single-line JSON; default is `json.MarshalIndent` 2-space (`printResult`,
   `cmd/root.go#L131`). Every generated command accepts it via the root persistent flag.
-- Hand-written top-level commands: `logout` (clears the stored token from the config file — it
-  makes no RPC call) and `version`. There is **no** `mininote login` or `mininote whoami`, and no
+- The only hand-written top-level command is `version` (plus cobra's built-in `help`); the CLI
+  ships no auth commands (no `mininote login` or `mininote whoami`). There is also no
   generated `auth` service: Auth RPCs are session-only and redacted from the live introspect route,
   and the generated client is strictly key-available by design, so no command can reach them.
+  Cobra's auto-generated `completion` command is disabled too — the CLI is a 1:1 RPC surface.
 
 ## The CLI surface & what's in the responses
 
@@ -240,7 +241,7 @@ go test -run TestIntegration -v ./client/   # live; SKIPPED unless MININOTE_RPC_
 6. **Wrap errors:** `fmt.Errorf("page tree: %w", err)`; the CLI reports `*client.APIError` as a
    single friendly line (`rpcErr`) and anything else via `Execute` — don't double-print.
 7. **Thin `RunE`s:** generated commands are already thin (build params → call → print). Keep
-   hand-written commands (see `auth.go`) in the same shape.
+   hand-written commands (`version`) in the same shape.
 
 ## Gotchas
 
