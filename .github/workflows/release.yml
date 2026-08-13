@@ -34,13 +34,25 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      # version: latest resolves the newest GoReleaser v2, matching the v2
-      # schema in .goreleaser.yaml.
+      - name: Build
+        run: go build ./cmd/mininote
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test ./...
+
+      # version: pinned to a known-good GoReleaser v2 so a future upstream
+      # breaking change can't silently fail releases. goreleaser-action@v6
+      # accepts a literal semver (v2.x.y) or a '~> v2' range; we use a literal
+      # for full determinism. To bump: raise this pin in a normal commit,
+      # push a test tag, and only promote the tag once the release succeeds.
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
-          version: latest
+          version: v2.17.1
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

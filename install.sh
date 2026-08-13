@@ -84,21 +84,47 @@ echo "Downloading $url"
 tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/mininote-install.XXXXXX")"
 trap 'rm -rf "$tmpdir"' EXIT INT TERM
 
-if command -v curl >/dev/null 2>&1; then
-  curl -sfL "$url" -o "$tmpdir/$asset"
-elif command -v wget >/dev/null 2>&1; then
-  wget -q "$url" -O "$tmpdir/$asset"
-else
+# fetch <url> [<outfile>] — download with curl, falling back to wget.
+# With <outfile>, the payload is written to that file (binary download);
+# without, it is written to stdout (streamed, e.g. checksums.txt).
+fetch() {
+  if command -v curl >/dev/null 2>&1; then
+    if [ "$#" -eq 2 ]; then
+      curl -sfL "$1" -o "$2"
+    else
+      curl -sfL "$1"
+    fi
+  elif command -v wget >/dev/null 2>&1; then
+    if [ "$#" -eq 2 ]; then
+      wget -q "$1" -O "$2"
+    else
+      wget -qO- "$1"
+    fi
+  else
+    return 1
+  fi
+}
+
+if ! fetch "$url" "$tmpdir/$asset"; then
   echo "error: need curl or wget to download the release" >&2
   exit 1
 fi
 
 # Best-effort checksum verification when checksums.txt is published.
+# Pick a sha256 hasher: sha256sum (linux / most unixes) or shasum -a 256 (macOS).
 if command -v sha256sum >/dev/null 2>&1; then
+  sha256_cmd="sha256sum"
+elif command -v shasum >/dev/null 2>&1; then
+  sha256_cmd="shasum -a 256"
+else
+  sha256_cmd=""
+fi
+
+if [ -n "$sha256_cmd" ]; then
   checksums_url="https://github.com/$REPO/releases/download/$tag/checksums.txt"
-  expected="$(curl -sfL "$checksums_url" 2>/dev/null | grep "^[0-9a-f]*  $asset\$" | awk '{print $1}' | head -n1)" || true
+  expected="$(fetch "$checksums_url" 2>/dev/null | grep "^[0-9a-f]*  $asset\$" | awk '{print $1}' | head -n1)" || true
   if [ -n "$expected" ]; then
-    actual="$(sha256sum "$tmpdir/$asset" | awk '{print $1}')"
+    actual="$($sha256_cmd "$tmpdir/$asset" | awk '{print $1}')"
     if [ "$actual" != "$expected" ]; then
       echo "error: checksum mismatch for $asset" >&2
       echo "  expected: $expected" >&2
@@ -109,12 +135,14 @@ if command -v sha256sum >/dev/null 2>&1; then
   else
     echo "note: no checksums.txt for $tag — skipping checksum verification"
   fi
+else
+  echo "note: no sha256 hasher found (need sha256sum or shasum) — skipping checksum verification"
 fi
 
 # --- extract -------------------------------------------------------------------
 tar -xzf "$tmpdir/$asset" -C "$tmpdir"
 # The archive may or may not wrap the binary in a directory; locate it anywhere.
-bin="$(find "$tmpdir" -type f -name "$BIN" | head -n1)"
+bin="$(find "$tmpdir" -type f -name "$BIN" -perm -u+x | head -n1)"
 if [ -z "$bin" ]; then
   echo "error: '$BIN' binary not found in $asset" >&2
   exit 1
@@ -133,6 +161,15 @@ fi
 mkdir -p "$installdir"
 install -m 0755 "$bin" "$installdir/$BIN"
 
+# --- create the config directory so it's ready for `mininote config set-token` ---
+configdir="${XDG_CONFIG_HOME:-$HOME/.config}/mininote"
+mkdir -p "$configdir"
+
 echo
 echo "Installed mininote ${version} to $installdir/$BIN"
-echo "Run 'mininote --help' to get started (add $installdir to your PATH if needed)."
+echo
+echo "To get started, save your API key:"
+echo "  mininote config set-token mnk_..."
+echo
+echo "Then try:"
+echo "  mininote page tree"

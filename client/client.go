@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-//go:generate go run github.com/dakolli/mininote-cli/gen -introspect https://mininote.ink/rpc/_introspect -forbidden ../../api-key-forbidden.txt
+//go:generate go run github.com/dakolli/mininote-cli/gen -introspect https://mininote.ink/rpc/_introspect -forbidden ../api-key-forbidden.txt
 
 // Client talks to a single mininote server over HTTP JSON-RPC.
 type Client struct {

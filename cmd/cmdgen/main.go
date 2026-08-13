@@ -28,17 +28,14 @@ import (
 var templateSrc string
 
 const (
-	defaultIn     = "../../intro.json"
 	forbiddenName = "api-key-forbidden.txt"
-	defaultOut    = "../commands.gen.go"
+	defaultOut    = "cmd/commands.gen.go"
 )
 
 func main() {
-	in := flag.String("in", defaultIn, "path to the intro.json spec file (passing it explicitly skips the live capture and uses the file as-is — the committed spec is a STALE offline fallback)")
 	out := flag.String("out", defaultOut, "output file for generated cobra commands")
 	introspect := flag.String("introspect", spec.DefaultIntrospectURL, "live spec capture URL; the captured spec is written to <repo root>/intro.json on every run")
 	forbidden := flag.String("forbidden", "", "path to api-key-forbidden.txt (default: <repo root>/api-key-forbidden.txt)")
-	offline := flag.Bool("offline", false, "regenerate from the committed intro.json without a live capture (used by CI; no STALE warning — this is intentional)")
 	full := flag.Bool("full", false, "skip forbidden-list pruning and generate the complete surface from the spec")
 	flag.Parse()
 
@@ -49,9 +46,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("find module root: %v", err)
 	}
-	if !flagSet("in") {
-		*in = filepath.Join(specDir(root), "intro.json")
-	}
+	in := filepath.Join(specDir(root), "intro.json")
 	if !flagSet("out") {
 		*out = filepath.Join(root, "cmd", "commands.gen.go")
 	}
@@ -59,24 +54,13 @@ func main() {
 		*forbidden = filepath.Join(specDir(root), forbiddenName)
 	}
 
-	// The spec is always re-captured live unless -in or -offline was passed:
-	// the committed intro.json is a stale fallback for offline builds only.
-	// *in already points at the committed <repo root>/intro.json when -in was
-	// not given (resolved above), so -offline just skips the capture.
-	switch {
-	case *offline && flagSet("in"):
-		log.Fatalf("-in and -offline are mutually exclusive: pass -offline (committed spec) or -in <file>, not both")
-	case flagSet("in"):
-		spec.StaleSpecWarning(*in)
-	case *offline:
-		log.Printf("offline: regenerating from committed spec %s (no live capture)", *in)
-	default:
-		if _, _, err := spec.CaptureSpec(context.Background(), *introspect, spec.SpecToken(), *in); err != nil {
-			log.Fatalf("capture spec from %s: %v (set MININOTE_ADMIN_AGENT_KEY or MININOTE_TOKEN)", *introspect, err)
-		}
+	// The spec is always re-captured live before generation: intro.json is a
+	// committed snapshot of the last live capture, never an offline fallback.
+	if _, _, err := spec.CaptureSpec(context.Background(), *introspect, spec.SpecToken(), in); err != nil {
+		log.Fatalf("capture spec from %s: %v (set MININOTE_ADMIN_AGENT_KEY or MININOTE_TOKEN)", *introspect, err)
 	}
 
-	s, err := spec.LoadSpec(*in)
+	s, err := spec.LoadSpec(in)
 	if err != nil {
 		log.Fatalf("load spec: %v", err)
 	}
@@ -169,19 +153,10 @@ func moduleRoot() (string, error) {
 	}
 }
 
-// specDir returns the directory holding the committed spec (intro.json).
-// The source layout nests the module at cli/ with the spec at the repo root
-// (filepath.Dir(root)); the mirror layout flattens both into the module root
-// itself. Probe both candidates and prefer whichever exists, falling back to
-// the source layout when neither is present (live capture will create it).
+// specDir returns the directory holding the spec (intro.json).
+// The module root IS the repo root.
 func specDir(root string) string {
-	if _, err := os.Stat(filepath.Join(filepath.Dir(root), "intro.json")); err == nil {
-		return filepath.Dir(root)
-	}
-	if _, err := os.Stat(filepath.Join(root, "intro.json")); err == nil {
-		return root
-	}
-	return filepath.Dir(root)
+	return root
 }
 
 // serviceView is one RPC service rendered as a cobra command.

@@ -1,9 +1,8 @@
 # CI for the mirror repo (github.com/dakolli/mininote-cli).
 # This file is staged under mininote-gen/publish/ and copied verbatim to
-# .github/workflows/ci.yml in the mirror root by the publish script (PLUG-35).
+# .github/workflows/ci.yml in the mirror root by the publish script.
 # All paths below are relative to the MIRROR ROOT, where the module lives at
-# the repo root (go.mod, gen/, cmd/, client/, intro.json all at ".").
-# No secrets are needed: -offline regenerates from the committed intro.json.
+# the repo root (go.mod, gen/, cmd/, client/ all at ".").
 
 name: CI
 
@@ -16,25 +15,19 @@ name: CI
 
 jobs:
   ci:
-    name: Stale-code gate, build, vet, test
+    name: Build, vet, test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
           cache: true
-
-      # Fail fast before building: regenerate from the committed intro.json in
-      # offline mode and refuse to proceed if the committed .gen.go files drift.
-      - name: Verify generated code is up to date
-        run: |
-          go run ./gen -offline
-          go run ./cmd/cmdgen -offline
-          git diff --exit-code || (echo "Generated code is out of date. Please run 'go generate ./...' and commit the changes." && exit 1)
 
       - name: Build
         run: go build ./cmd/mininote

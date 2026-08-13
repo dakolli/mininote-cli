@@ -1,12 +1,19 @@
-# Local build artifacts
-/mininote
-/cli/mininote
-
-# Scratch / diagnostic output
-cli/test_results
-cli/test_results.txt
-cli/route_audit.txt
-cli/integration_tests.txt
-
-# OS
+# OS cruft
 .DS_Store
+
+# Local secrets (never committed)
+.env
+
+# GoReleaser build output
+dist/
+
+# Locally built binary
+mininote
+
+# Generator inputs — these live on disk but are not published.
+# intro.json is re-captured live on every `go generate` from the server's
+# introspection route. api-key-forbidden.txt is a manually curated list of
+# routes to prune from the generated surface. Both are internal to the
+# generation pipeline and not needed to build from source.
+intro.json
+api-key-forbidden.txt

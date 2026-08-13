@@ -33,7 +33,7 @@ var (
 	flagCompact bool
 )
 
-//go:generate go run github.com/dakolli/mininote-cli/cmd/cmdgen -introspect https://mininote.ink/rpc/_introspect -forbidden ../../api-key-forbidden.txt
+//go:generate go run github.com/dakolli/mininote-cli/cmd/cmdgen -introspect https://mininote.ink/rpc/_introspect -forbidden ../api-key-forbidden.txt
 
 func init() {
 	pf := rootCmd.PersistentFlags()
@@ -48,6 +48,7 @@ func init() {
 
 	registerServiceCommands(rootCmd, getClient)
 	rootCmd.AddCommand(versionCmd)
+	rootCmd.AddCommand(configCmd)
 }
 
 // getClient resolves the base URL and token from flags, config, and the

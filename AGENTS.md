@@ -18,42 +18,40 @@ deliberately boring.
 - **Not the backend.** There is no server here. This is a *client* of the mininote.ink JSON-RPC
   backend, and everything is driven by what the spec says. When the backend changes, `intro.json`
   must be re-captured before regeneration.
-- The module is `github.com/dakolli/mininote-cli`, nested one level down at `cli/` (the repo root holds
-  `intro.json`, `.gitignore`, `README.md`). **The spec lives at the repo root; the module lives in
-  `cli/`.** This asymmetry trips people up — see Gotchas.
+- The module is `github.com/dakolli/mininote-cli` at the repo root. `intro.json` and `api-key-forbidden.txt` are gitignored local generator inputs; generated `*.gen.go` files are committed.
 
 ## Codebase Orientation
 
 | File | Role | Generated? |
 |---|---|---|
-| `intro.json` | API catalog (services/methods/types) | committed snapshot, **re-captured live on every `go generate`** |
-| `api-key-forbidden.txt` | `Service.method` routes pruned from the generated surface by default (data, not code) | committed snapshot, manually refreshed |
-| `cli/go.mod`, `cli/go.sum` | module `github.com/dakolli/mininote-cli`, Go 1.26.4, only dep: `spf13/cobra` | hand-written |
-| `cli/gen/gen.go` | client generator entrypoint (`gen`) | hand-written |
-| `cli/gen/spec/spec.go` | loads + normalizes `intro.json` into a Go-ready `Model` | hand-written |
-| `cli/gen/templates/*.tmpl` | `text/template` skeletons for types/methods | hand-written |
-| `cli/cmd/cmdgen/main.go` | cobra command-tree generator (`cmdgen`) | hand-written |
-| `cli/client/client.go` | **runtime**: envelope, auth modes, `APIError` decoding | hand-written |
-| `cli/client/types.gen.go` | all spec types (never pruned) | **generated, gitignored** |
-| `cli/client/methods.gen.go` | RPC methods on `*Client` (key-available only by default; `-full` for everything) | **generated, gitignored** |
-| `cli/cmd/commands.gen.go` | service commands × method subcommands (key-available services by default) | **generated, gitignored** |
-| `cli/cmd/root.go`, `config.go`, `main.go` | cobra wiring, config file | hand-written |
-| `cli/cmd/mininote/main.go` | `func main() { cmd.Execute() }` | hand-written |
-| `cli/client/client_test.go` | httptest unit tests (no network) | hand-written |
-| `cli/client/integration_test.go` | live tests, skipped unless `MININOTE_RPC_KEY` set | hand-written |
+| `intro.json` | API catalog (services/methods/types) | local snapshot (gitignored), **re-captured live on `go generate`** |
+| `api-key-forbidden.txt` | `Service.method` routes pruned from the generated surface by default | local snapshot (gitignored), manually refreshed |
+| `go.mod`, `go.sum` | module `github.com/dakolli/mininote-cli`, Go 1.26.4, dep: `spf13/cobra` | hand-written |
+| `gen/gen.go` | client generator entrypoint (`gen`) | hand-written |
+| `gen/spec/spec.go` | loads + normalizes `intro.json` into a Go-ready `Model` | hand-written |
+| `gen/templates/*.tmpl` | `text/template` skeletons for types/methods | hand-written |
+| `cmd/cmdgen/main.go` | cobra command-tree generator (`cmdgen`) | hand-written |
+| `client/client.go` | **runtime**: envelope, auth modes, `APIError` decoding | hand-written |
+| `client/types.gen.go` | all spec types (never pruned) | **generated, committed** |
+| `client/methods.gen.go` | RPC methods on `*Client` (key-available only by default; `-full` for everything) | **generated, committed** |
+| `cmd/commands.gen.go` | service commands × method subcommands (key-available services by default) | **generated, committed** |
+| `cmd/root.go`, `config.go`, `main.go` | cobra wiring, config file | hand-written |
+| `cmd/mininote/main.go` | `func main() { cmd.Execute() }` | hand-written |
+| `client/client_test.go` | httptest unit tests (no network) | hand-written |
+| `client/integration_test.go` | live tests, skipped unless `MININOTE_RPC_KEY` set | hand-written |
 
 ### Generated vs hand-written — the split that matters
 
 - **Generated:** every typed struct, every RPC method stub, and the whole cobra tree. They are
-  rebuildable from `intro.json` alone and are **gitignored** (`**/*.gen.go` plus explicit entries in
-  the repo-root `.gitignore`). Never edit them — edit the templates or the spec and regenerate.
+  rebuildable from `intro.json` alone and are **committed** so consumers can build directly.
+  Never edit them — edit the templates or the spec and regenerate.
 - **Hand-written:** the runtime (`client/client.go`), the spec normalizer (`gen/spec/spec.go`), the
   generators, and the CLI plumbing. This is where all real logic lives.
 - The `//go:generate` directives are attached to the *hand-written* files they regenerate:
-  `client/client.go#L18` and `cmd/root.go#L33` — both now run with
-  `-introspect https://mininote.ink/rpc/_introspect -forbidden ../../api-key-forbidden.txt`, so a bare
-  `go generate ./...` re-captures the spec live, rewrites the repo-root `intro.json`, and prunes the
-  generated surface to the key-available routes (see the Gotchas entries below). Running
+  `client/client.go#L18` and `cmd/root.go#L36` — both run with
+  `-introspect https://mininote.ink/rpc/_introspect -forbidden ../api-key-forbidden.txt`, so a bare
+  `go generate ./...` re-captures the spec live, rewrites `intro.json`, and prunes the
+  generated surface to the key-available routes. Running
   `go generate ./...` from anywhere in the module rebuilds all three `.gen.go` files.
 
 ## Architecture: intro.json → text/template → .gen.go
@@ -209,10 +207,10 @@ go test -run TestIntegration -v ./client/   # live; SKIPPED unless MININOTE_RPC_
   why the directives work from anywhere in the module. The spec itself is captured live; the repo-root
   `intro.json` is rewritten every run (auth from `MININOTE_ADMIN_AGENT_KEY`, then `MININOTE_RPC_KEY`,
   then `MININOTE_TOKEN`).
-- **CI / offline regeneration:** use `go run ./gen -offline` + `go run ./cmd/cmdgen -offline` for a
-  deterministic, network-free rebuild from the committed `intro.json` (no `STALE SPEC` warning — that
-  banner is only for explicit `-in`). Local `go generate ./...` stays live-capturing; `-in` and
-  `-offline` are mutually exclusive.
+- **Generation is always live.** `gen`/`cmdgen` have no `-in`/`-offline` modes:
+  every invocation re-captures the spec from the live `rpc/_introspect` route and
+  rewrites the repo-root `intro.json` before generating. `go generate ./...`
+  therefore always produces a fresh client from the current server catalog.
 - The unit tests (`client_test.go`) spin up an `httptest.Server` and assert the exact request body
   (`{"args":{...}}`), the `Bearer` header, envelope decoding, and that the client-side
   session-only block returns 403 without a network call (`TestSessionOnlyBlockedForAPIKey`).
@@ -255,9 +253,9 @@ go test -run TestIntegration -v ./client/   # live; SKIPPED unless MININOTE_RPC_
   A workspace key can read and rewrite ticket metadata directly — `Page.upsert` is not the only
   mutation path.
 - **Spec and module live in different roots.** `intro.json` sits at the repo root; `go.mod` sits
-  in `cli/`. Generators resolve the module root by walking up for `go.mod` (`gen.go#L68`), and
-  cmdgen recomputes its defaults from that root (`cmdgen/main.go#L42-L51`), so both work when
-  invoked manually too — but a spec path passed explicitly is relative to cwd.
+  in `cli/`. Generators resolve the module root by walking up for `go.mod` (`gen.go#L36`), and
+  cmdgen recomputes its defaults from that root (`cmdgen/main.go#L42-L55`), so both work when
+  invoked manually too — the live capture is always written to the repo-root `intro.json`.
 - **`page tree` takes no params.** There is no flag to request `num`; whether rows carry `num` is
   decided server-side per caller. If a picker needs reliable `num`, use `page listPrefix`, not
   `page tree`. (Verified 2026-08-11: workspace key tree → 0/27 with `num`; admin-tier key tree →
@@ -275,8 +273,8 @@ go test -run TestIntegration -v ./client/   # live; SKIPPED unless MININOTE_RPC_
 - **`intro.json` is re-captured live on every generation — never trust the committed copy.** The `//go:generate`
   directives run `gen`/`cmdgen` with `-introspect https://mininote.ink/rpc/_introspect`, which POSTs `{}`
   (bearer auth from `MININOTE_ADMIN_AGENT_KEY`, then `MININOTE_RPC_KEY`, then `MININOTE_TOKEN`) and rewrites
-  the repo-root `intro.json` before building the model. The committed file is a fallback **only** for explicit
-  `-in <file>` use / offline builds, and prints a loud `STALE SPEC` warning then. The introspection route
+  the repo-root `intro.json` before building the model. The generators have no offline mode — the committed
+  file is a snapshot of the last live capture and is never consumed without a fresh capture. The introspection route
   redacts the control plane (no `Admin` service; `Auth` exposes only `me`), so a fresh capture has fewer
   methods than the old full 202-method snapshots.
 - **`api-key-forbidden.txt` is a snapshot, refreshed manually.** It lists the `Service.method` routes the

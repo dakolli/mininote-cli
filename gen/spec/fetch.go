@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"time"
@@ -91,13 +90,6 @@ func SpecToken() string {
 		}
 	}
 	return ""
-}
-
-// StaleSpecWarning logs the loud banner shown when a generation consumes the
-// committed intro.json (explicit -in) instead of a fresh live capture. It is a
-// warning, never fatal — the committed file remains the offline fallback.
-func StaleSpecWarning(path string) {
-	log.Printf("WARNING: STALE SPEC — generation did not re-capture intro.json (used %s)", path)
 }
 
 func truncate(b []byte, n int) string {
