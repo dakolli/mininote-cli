@@ -6,9 +6,10 @@
 # The source of truth stays NESTED inside workspace_mininote (the Go module
 # lives at mininote-gen/cli). This script whitelist-copies it into a FLAT
 # staging dir whose root mirrors the public repo layout: go.mod, go.sum, gen/,
-# cmd/, client/, intro.json, api-key-forbidden.txt, README.md, AGENTS.md,
-# LICENSE all at the top level, plus the release assets staged in
-# mininote-gen/publish/ (.github/, .goreleaser.yaml, install.sh, .gitignore).
+# cmd/, client/, intro.json, api-key-forbidden.txt, LICENSE all at the top
+# level, plus the release assets staged in mininote-gen/publish/ (.github/,
+# .goreleaser.yaml, install.sh, .gitignore, README.md — the published README
+# lives there; the dev README and AGENTS.md stay internal).
 #
 # The script only SYNCS the staging dir — it never pushes. Committing and
 # pushing are deliberately left to the user/planner (the empty GitHub repo is
@@ -77,8 +78,10 @@ done
 # that IS published lives in client/ and cmd/ (copied wholesale above).
 find "$STAGE/gen" -name '*.gen.go' -type f -delete
 
-# 2. Repo-root data/docs.
-for f in intro.json api-key-forbidden.txt README.md AGENTS.md LICENSE; do
+# 2. Repo-root data/docs. The dev README.md and AGENTS.md are INTERNAL (dev
+#    docs / agent instructions) and are deliberately NOT synced — the published
+#    README.md comes from publish/ below.
+for f in intro.json api-key-forbidden.txt LICENSE; do
   [ -f "$ROOT_DIR/$f" ] || die "whitelisted source missing: $f"
   cp -a "$ROOT_DIR/$f" "$STAGE/$f"
 done
@@ -97,9 +100,11 @@ echo "Synced from cli/ (module now at mirror root):"
 printf '  %s\n' "${module_items[@]}"
 echo "  (gen/*.gen.go stripped — generated client/ and cmd/ code IS published)"
 echo "Synced from $ROOT_DIR:"
-printf '  %s\n' intro.json api-key-forbidden.txt README.md AGENTS.md LICENSE
+printf '  %s\n' intro.json api-key-forbidden.txt LICENSE
+echo "  (dev README.md and AGENTS.md stay internal — not synced)"
 echo "Synced from publish/ (release assets):"
 (cd "$PUBLISH_SRC" && find . -type f | sed 's|^\./|  |' | sort)
+echo "  (publish/README.md is the published user-facing README — lands at the mirror root)"
 echo
 echo "No .env or key material staged."
 echo "Staged $(find "$STAGE" -type f | wc -l | tr -d ' ') files."
