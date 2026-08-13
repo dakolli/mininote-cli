@@ -167,6 +167,7 @@ type serviceView struct {
 }
 
 // methodView is one RPC method rendered as a cobra subcommand.
+// methodView is one RPC method rendered as a cobra subcommand.
 type methodView struct {
 	CmdFunc     string
 	Method      string
@@ -175,17 +176,41 @@ type methodView struct {
 	HasParams   bool
 	RequestType string
 	Params      []paramView
+	Positional  []positionalView
+}
+
+type positionalView struct {
+	Index    int
+	JsonName string
+	GoName   string
 }
 
 // paramView is one request field rendered as a command-line flag.
 type paramView struct {
-	JsonName string
-	GoName   string
-	GoType   string
-	Required bool
-	Optional bool // *string/*float64/*bool: only set when the flag is passed
-	Kind     string
-	Help     string
+	JsonName  string
+	GoName    string
+	GoType    string
+	Required  bool
+	Optional  bool // *string/*float64/*bool: only set when the flag is passed
+	Kind      string
+	Help      string
+	Shorthand string
+}
+
+var preferredShorthands = map[string]string{
+	"query":     "q",
+	"id":        "i",
+	"path":      "p",
+	"body":      "b",
+	"title":     "t",
+	"name":      "n",
+	"limit":     "l",
+	"status":    "s",
+	"type":      "t",
+	"node_id":   "n",
+	"parent_id": "p",
+	"url":       "u",
+	"key":       "k",
 }
 
 // buildServices groups normalized methods by service, preserving the model's
@@ -216,16 +241,48 @@ func buildServices(s *spec.Spec, model *spec.Model) ([]serviceView, int) {
 			HasParams:   m.HasParams,
 			RequestType: m.RequestType,
 		}
+
+		usedShorthands := map[string]bool{"h": true} // 'h' is reserved by cobra for help
+		posIndex := 0
+
 		for _, f := range m.Params {
-			mv.Params = append(mv.Params, paramView{
-				JsonName: f.JsonName,
-				GoName:   f.GoName,
-				GoType:   f.GoType,
-				Required: f.Required,
-				Optional: strings.HasPrefix(f.GoType, "*"),
-				Kind:     paramKind(f.GoType),
-				Help:     paramHelp(f),
-			})
+			shorthand := ""
+			if pref, ok := preferredShorthands[f.JsonName]; ok && !usedShorthands[pref] {
+				shorthand = pref
+			} else {
+				for _, ch := range f.JsonName {
+					c := string(ch)
+					if c >= "a" && c <= "z" && !usedShorthands[c] {
+						shorthand = c
+						break
+					}
+				}
+			}
+			if shorthand != "" {
+				usedShorthands[shorthand] = true
+			}
+
+			kind := paramKind(f.GoType)
+			pv := paramView{
+				JsonName:  f.JsonName,
+				GoName:    f.GoName,
+				GoType:    f.GoType,
+				Required:  f.Required,
+				Optional:  strings.HasPrefix(f.GoType, "*"),
+				Kind:      kind,
+				Help:      paramHelp(f),
+				Shorthand: shorthand,
+			}
+			mv.Params = append(mv.Params, pv)
+
+			if (kind == "string" || kind == "json") && posIndex < 2 {
+				mv.Positional = append(mv.Positional, positionalView{
+					Index:    posIndex,
+					JsonName: f.JsonName,
+					GoName:   f.GoName,
+				})
+				posIndex++
+			}
 		}
 		svcs[idx].Methods = append(svcs[idx].Methods, mv)
 		total++

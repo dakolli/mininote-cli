@@ -45,6 +45,28 @@ func {{.CmdFunc}}(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   {{printf "%q" .Method}},
 		Short: {{printf "%q" .Short}},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			{{- if .Positional }}
+			{{- range .Positional }}
+			if len(args) > {{.Index}} && !cmd.Flags().Changed("{{.JsonName}}") {
+				{{varName .GoName}} = args[{{.Index}}]
+			}
+			{{- end }}
+			{{- end }}
+			{{- if .HasParams }}
+			{{- range .Params }}
+			{{- if .Required }}
+			{{- if or (eq .Kind "string") (eq .Kind "json") }}
+			if !cmd.Flags().Changed("{{.JsonName}}") && {{varName .GoName}} == "" {
+				return fmt.Errorf("required flag --{{.JsonName}} (or positional argument) is missing")
+			}
+			{{- else }}
+			if !cmd.Flags().Changed("{{.JsonName}}") {
+				return fmt.Errorf("required flag --{{.JsonName}} is missing")
+			}
+			{{- end }}
+			{{- end }}
+			{{- end }}
+			{{- end }}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -54,7 +76,7 @@ func {{.CmdFunc}}(getClient func() (*client.Client, error)) *cobra.Command {
 			{{- range .Params }}
 			{{- if eq .Kind "json" }}
 			{{- if .Optional }}
-			if cmd.Flags().Changed("{{.JsonName}}") {
+			if cmd.Flags().Changed("{{.JsonName}}") || {{varName .GoName}} != "" {
 				if err := json.Unmarshal([]byte({{varName .GoName}}), &req.{{.GoName}}); err != nil {
 					return fmt.Errorf("{{.JsonName}}: invalid JSON: %w", err)
 				}
@@ -65,9 +87,15 @@ func {{.CmdFunc}}(getClient func() (*client.Client, error)) *cobra.Command {
 			}
 			{{- end }}
 			{{- else if .Optional }}
+			{{- if eq .Kind "string" }}
+			if cmd.Flags().Changed("{{.JsonName}}") || {{varName .GoName}} != "" {
+				req.{{.GoName}} = &{{varName .GoName}}
+			}
+			{{- else }}
 			if cmd.Flags().Changed("{{.JsonName}}") {
 				req.{{.GoName}} = &{{varName .GoName}}
 			}
+			{{- end }}
 			{{- else }}
 			req.{{.GoName}} = {{varName .GoName}}
 			{{- end }}
@@ -85,9 +113,10 @@ func {{.CmdFunc}}(getClient func() (*client.Client, error)) *cobra.Command {
 	{{- if .HasParams }}
 	flags := cmd.Flags()
 	{{- range .Params }}
+	{{- if .Shorthand }}
+	flags.{{flagSetFn .Kind}}VarP(&{{varName .GoName}}, "{{.JsonName}}", "{{.Shorthand}}", {{flagDefault .Kind}}, {{printf "%q" .Help}})
+	{{- else }}
 	flags.{{flagSetFn .Kind}}Var(&{{varName .GoName}}, "{{.JsonName}}", {{flagDefault .Kind}}, {{printf "%q" .Help}})
-	{{- if .Required }}
-	_ = cmd.MarkFlagRequired("{{.JsonName}}")
 	{{- end }}
 	{{- end }}
 	{{- end }}

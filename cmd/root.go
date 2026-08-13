@@ -95,17 +95,17 @@ func resolveEndpoint() (baseURL, token string, err error) {
 	return baseURL, token, nil
 }
 
-// defaultConfigPath returns $XDG_CONFIG_HOME/mininote/cli.json, falling back
-// to ~/.config/mininote/cli.json.
+// defaultConfigPath returns $XDG_CONFIG_HOME/mininote/cli.yaml, falling back
+// to ~/.config/mininote/cli.yaml.
 func defaultConfigPath() string {
 	if xdg := os.Getenv("XDG_CONFIG_HOME"); xdg != "" {
-		return filepath.Join(xdg, "mininote", "cli.json")
+		return filepath.Join(xdg, "mininote", "cli.yaml")
 	}
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return ""
 	}
-	return filepath.Join(home, ".config", "mininote", "cli.json")
+	return filepath.Join(home, ".config", "mininote", "cli.yaml")
 }
 
 // errExit is the sentinel returned once rpcErr has already reported the error,

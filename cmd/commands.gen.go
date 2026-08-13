@@ -202,6 +202,18 @@ func cmdAnnotationAdd(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "add",
 		Short: "Add",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("node_id") {
+				pNodeID = args[0]
+			}
+			if len(args) > 1 && !cmd.Flags().Changed("body") {
+				pBody = args[1]
+			}
+			if !cmd.Flags().Changed("node_id") && pNodeID == "" {
+				return fmt.Errorf("required flag --node_id (or positional argument) is missing")
+			}
+			if !cmd.Flags().Changed("body") && pBody == "" {
+				return fmt.Errorf("required flag --body (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -209,28 +221,28 @@ func cmdAnnotationAdd(getClient func() (*client.Client, error)) *cobra.Command {
 			var req client.AnnotationAddParams
 			req.NodeID = pNodeID
 			req.Body = pBody
-			if cmd.Flags().Changed("anchor_type") {
+			if cmd.Flags().Changed("anchor_type") || pAnchorType != "" {
 				req.AnchorType = &pAnchorType
 			}
-			if cmd.Flags().Changed("anchor_quote") {
+			if cmd.Flags().Changed("anchor_quote") || pAnchorQuote != "" {
 				req.AnchorQuote = &pAnchorQuote
 			}
-			if cmd.Flags().Changed("anchor_prefix") {
+			if cmd.Flags().Changed("anchor_prefix") || pAnchorPrefix != "" {
 				req.AnchorPrefix = &pAnchorPrefix
 			}
-			if cmd.Flags().Changed("anchor_suffix") {
+			if cmd.Flags().Changed("anchor_suffix") || pAnchorSuffix != "" {
 				req.AnchorSuffix = &pAnchorSuffix
 			}
-			if cmd.Flags().Changed("anchor_rev") {
+			if cmd.Flags().Changed("anchor_rev") || pAnchorRev != "" {
 				req.AnchorRev = &pAnchorRev
 			}
-			if cmd.Flags().Changed("color") {
+			if cmd.Flags().Changed("color") || pColor != "" {
 				req.Color = &pColor
 			}
-			if cmd.Flags().Changed("parent_id") {
+			if cmd.Flags().Changed("parent_id") || pParentID != "" {
 				req.ParentID = &pParentID
 			}
-			if cmd.Flags().Changed("token") {
+			if cmd.Flags().Changed("token") || pToken != "" {
 				req.Token = &pToken
 			}
 			resp, err := c.AnnotationAdd(cmd.Context(), req)
@@ -241,18 +253,16 @@ func cmdAnnotationAdd(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pNodeID, "node_id", "", "Node id")
-	_ = cmd.MarkFlagRequired("node_id")
-	flags.StringVar(&pBody, "body", "", "Body")
-	_ = cmd.MarkFlagRequired("body")
-	flags.StringVar(&pAnchorType, "anchor_type", "", "text quote-selector (default) or block media element")
-	flags.StringVar(&pAnchorQuote, "anchor_quote", "", "The exact selected text — OR the media src for a block anchor")
-	flags.StringVar(&pAnchorPrefix, "anchor_prefix", "", "~32 chars before the quote")
-	flags.StringVar(&pAnchorSuffix, "anchor_suffix", "", "~32 chars after the quote")
-	flags.StringVar(&pAnchorRev, "anchor_rev", "", "Page revision id at creation (orphan deep-link)")
-	flags.StringVar(&pColor, "color", "", "pigment red/orange/amber/green/blue/violet (root note)")
-	flags.StringVar(&pParentID, "parent_id", "", "For a threaded reply")
-	flags.StringVar(&pToken, "token", "", "Present when annotating via a share (visitor path)")
+	flags.StringVarP(&pNodeID, "node_id", "n", "", "Node id")
+	flags.StringVarP(&pBody, "body", "b", "", "Body")
+	flags.StringVarP(&pAnchorType, "anchor_type", "a", "", "text quote-selector (default) or block media element")
+	flags.StringVarP(&pAnchorQuote, "anchor_quote", "c", "", "The exact selected text — OR the media src for a block anchor")
+	flags.StringVarP(&pAnchorPrefix, "anchor_prefix", "o", "", "~32 chars before the quote")
+	flags.StringVarP(&pAnchorSuffix, "anchor_suffix", "r", "", "~32 chars after the quote")
+	flags.StringVarP(&pAnchorRev, "anchor_rev", "e", "", "Page revision id at creation (orphan deep-link)")
+	flags.StringVarP(&pColor, "color", "l", "", "pigment red/orange/amber/green/blue/violet (root note)")
+	flags.StringVarP(&pParentID, "parent_id", "p", "", "For a threaded reply")
+	flags.StringVarP(&pToken, "token", "t", "", "Present when annotating via a share (visitor path)")
 	return cmd
 }
 
@@ -263,12 +273,15 @@ func cmdAnnotationChanges(getClient func() (*client.Client, error)) *cobra.Comma
 		Use:   "changes",
 		Short: "Changes",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("since") {
+				pSince = args[0]
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
 			}
 			var req client.AnnotationChangesParams
-			if cmd.Flags().Changed("since") {
+			if cmd.Flags().Changed("since") || pSince != "" {
 				req.Since = &pSince
 			}
 			resp, err := c.AnnotationChanges(cmd.Context(), req)
@@ -279,7 +292,7 @@ func cmdAnnotationChanges(getClient func() (*client.Client, error)) *cobra.Comma
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pSince, "since", "", "RFC3339Nano cursor; empty = full")
+	flags.StringVarP(&pSince, "since", "s", "", "RFC3339Nano cursor; empty = full")
 	return cmd
 }
 
@@ -291,13 +304,22 @@ func cmdAnnotationDelete(getClient func() (*client.Client, error)) *cobra.Comman
 		Use:   "delete",
 		Short: "Delete",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("id") {
+				pID = args[0]
+			}
+			if len(args) > 1 && !cmd.Flags().Changed("token") {
+				pToken = args[1]
+			}
+			if !cmd.Flags().Changed("id") && pID == "" {
+				return fmt.Errorf("required flag --id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
 			}
 			var req client.AnnotationDeleteParams
 			req.ID = pID
-			if cmd.Flags().Changed("token") {
+			if cmd.Flags().Changed("token") || pToken != "" {
 				req.Token = &pToken
 			}
 			resp, err := c.AnnotationDelete(cmd.Context(), req)
@@ -308,9 +330,8 @@ func cmdAnnotationDelete(getClient func() (*client.Client, error)) *cobra.Comman
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pID, "id", "", "Annotation id")
-	_ = cmd.MarkFlagRequired("id")
-	flags.StringVar(&pToken, "token", "", "Present when deleting via a share (visitor path)")
+	flags.StringVarP(&pID, "id", "i", "", "Annotation id")
+	flags.StringVarP(&pToken, "token", "t", "", "Present when deleting via a share (visitor path)")
 	return cmd
 }
 
@@ -323,6 +344,18 @@ func cmdAnnotationEdit(getClient func() (*client.Client, error)) *cobra.Command 
 		Use:   "edit",
 		Short: "Edit",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("id") {
+				pID = args[0]
+			}
+			if len(args) > 1 && !cmd.Flags().Changed("body") {
+				pBody = args[1]
+			}
+			if !cmd.Flags().Changed("id") && pID == "" {
+				return fmt.Errorf("required flag --id (or positional argument) is missing")
+			}
+			if !cmd.Flags().Changed("body") && pBody == "" {
+				return fmt.Errorf("required flag --body (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -330,7 +363,7 @@ func cmdAnnotationEdit(getClient func() (*client.Client, error)) *cobra.Command 
 			var req client.AnnotationEditParams
 			req.ID = pID
 			req.Body = pBody
-			if cmd.Flags().Changed("token") {
+			if cmd.Flags().Changed("token") || pToken != "" {
 				req.Token = &pToken
 			}
 			resp, err := c.AnnotationEdit(cmd.Context(), req)
@@ -341,11 +374,9 @@ func cmdAnnotationEdit(getClient func() (*client.Client, error)) *cobra.Command 
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pID, "id", "", "Annotation id")
-	_ = cmd.MarkFlagRequired("id")
-	flags.StringVar(&pBody, "body", "", "Body")
-	_ = cmd.MarkFlagRequired("body")
-	flags.StringVar(&pToken, "token", "", "Present when editing via a share (visitor path)")
+	flags.StringVarP(&pID, "id", "i", "", "Annotation id")
+	flags.StringVarP(&pBody, "body", "b", "", "Body")
+	flags.StringVarP(&pToken, "token", "t", "", "Present when editing via a share (visitor path)")
 	return cmd
 }
 
@@ -357,13 +388,22 @@ func cmdAnnotationGet(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "get",
 		Short: "Get",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("id") {
+				pID = args[0]
+			}
+			if len(args) > 1 && !cmd.Flags().Changed("token") {
+				pToken = args[1]
+			}
+			if !cmd.Flags().Changed("id") && pID == "" {
+				return fmt.Errorf("required flag --id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
 			}
 			var req client.AnnotationGetParams
 			req.ID = pID
-			if cmd.Flags().Changed("token") {
+			if cmd.Flags().Changed("token") || pToken != "" {
 				req.Token = &pToken
 			}
 			resp, err := c.AnnotationGet(cmd.Context(), req)
@@ -374,9 +414,8 @@ func cmdAnnotationGet(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pID, "id", "", "Annotation id")
-	_ = cmd.MarkFlagRequired("id")
-	flags.StringVar(&pToken, "token", "", "Present when reading via a share (visitor path)")
+	flags.StringVarP(&pID, "id", "i", "", "Annotation id")
+	flags.StringVarP(&pToken, "token", "t", "", "Present when reading via a share (visitor path)")
 	return cmd
 }
 
@@ -388,13 +427,22 @@ func cmdAnnotationList(getClient func() (*client.Client, error)) *cobra.Command 
 		Use:   "list",
 		Short: "List",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("node_id") {
+				pNodeID = args[0]
+			}
+			if len(args) > 1 && !cmd.Flags().Changed("token") {
+				pToken = args[1]
+			}
+			if !cmd.Flags().Changed("node_id") && pNodeID == "" {
+				return fmt.Errorf("required flag --node_id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
 			}
 			var req client.AnnotationListParams
 			req.NodeID = pNodeID
-			if cmd.Flags().Changed("token") {
+			if cmd.Flags().Changed("token") || pToken != "" {
 				req.Token = &pToken
 			}
 			resp, err := c.AnnotationList(cmd.Context(), req)
@@ -405,9 +453,8 @@ func cmdAnnotationList(getClient func() (*client.Client, error)) *cobra.Command 
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pNodeID, "node_id", "", "Node id")
-	_ = cmd.MarkFlagRequired("node_id")
-	flags.StringVar(&pToken, "token", "", "Present when listing via a share (visitor path)")
+	flags.StringVarP(&pNodeID, "node_id", "n", "", "Node id")
+	flags.StringVarP(&pToken, "token", "t", "", "Present when listing via a share (visitor path)")
 	return cmd
 }
 
@@ -420,6 +467,15 @@ func cmdAnnotationSetResolved(getClient func() (*client.Client, error)) *cobra.C
 		Use:   "setResolved",
 		Short: "Set resolved",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("id") {
+				pID = args[0]
+			}
+			if len(args) > 1 && !cmd.Flags().Changed("token") {
+				pToken = args[1]
+			}
+			if !cmd.Flags().Changed("id") && pID == "" {
+				return fmt.Errorf("required flag --id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -429,7 +485,7 @@ func cmdAnnotationSetResolved(getClient func() (*client.Client, error)) *cobra.C
 			if cmd.Flags().Changed("resolved") {
 				req.Resolved = &pResolved
 			}
-			if cmd.Flags().Changed("token") {
+			if cmd.Flags().Changed("token") || pToken != "" {
 				req.Token = &pToken
 			}
 			resp, err := c.AnnotationSetResolved(cmd.Context(), req)
@@ -440,10 +496,9 @@ func cmdAnnotationSetResolved(getClient func() (*client.Client, error)) *cobra.C
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pID, "id", "", "Annotation id")
-	_ = cmd.MarkFlagRequired("id")
-	flags.BoolVar(&pResolved, "resolved", false, "true to resolve; false to reopen")
-	flags.StringVar(&pToken, "token", "", "Present when resolving via a share (visitor path)")
+	flags.StringVarP(&pID, "id", "i", "", "Annotation id")
+	flags.BoolVarP(&pResolved, "resolved", "r", false, "true to resolve; false to reopen")
+	flags.StringVarP(&pToken, "token", "t", "", "Present when resolving via a share (visitor path)")
 	return cmd
 }
 
@@ -454,6 +509,12 @@ func cmdCalFeedCreate(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "create",
 		Short: "Create",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("node_id") {
+				pNodeID = args[0]
+			}
+			if !cmd.Flags().Changed("node_id") && pNodeID == "" {
+				return fmt.Errorf("required flag --node_id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -468,8 +529,7 @@ func cmdCalFeedCreate(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pNodeID, "node_id", "", "Node id")
-	_ = cmd.MarkFlagRequired("node_id")
+	flags.StringVarP(&pNodeID, "node_id", "n", "", "Node id")
 	return cmd
 }
 
@@ -480,6 +540,12 @@ func cmdCalFeedRevoke(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "revoke",
 		Short: "Revoke",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("node_id") {
+				pNodeID = args[0]
+			}
+			if !cmd.Flags().Changed("node_id") && pNodeID == "" {
+				return fmt.Errorf("required flag --node_id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -494,8 +560,7 @@ func cmdCalFeedRevoke(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pNodeID, "node_id", "", "Node id")
-	_ = cmd.MarkFlagRequired("node_id")
+	flags.StringVarP(&pNodeID, "node_id", "n", "", "Node id")
 	return cmd
 }
 
@@ -506,6 +571,12 @@ func cmdCalFeedStatus(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "status",
 		Short: "Status",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("node_id") {
+				pNodeID = args[0]
+			}
+			if !cmd.Flags().Changed("node_id") && pNodeID == "" {
+				return fmt.Errorf("required flag --node_id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -520,8 +591,7 @@ func cmdCalFeedStatus(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pNodeID, "node_id", "", "Node id")
-	_ = cmd.MarkFlagRequired("node_id")
+	flags.StringVarP(&pNodeID, "node_id", "n", "", "Node id")
 	return cmd
 }
 
@@ -534,6 +604,18 @@ func cmdCommentAdd(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "add",
 		Short: "Add",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("node_id") {
+				pNodeID = args[0]
+			}
+			if len(args) > 1 && !cmd.Flags().Changed("body") {
+				pBody = args[1]
+			}
+			if !cmd.Flags().Changed("node_id") && pNodeID == "" {
+				return fmt.Errorf("required flag --node_id (or positional argument) is missing")
+			}
+			if !cmd.Flags().Changed("body") && pBody == "" {
+				return fmt.Errorf("required flag --body (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -541,7 +623,7 @@ func cmdCommentAdd(getClient func() (*client.Client, error)) *cobra.Command {
 			var req client.CommentAddParams
 			req.NodeID = pNodeID
 			req.Body = pBody
-			if cmd.Flags().Changed("parent_id") {
+			if cmd.Flags().Changed("parent_id") || pParentID != "" {
 				req.ParentID = &pParentID
 			}
 			resp, err := c.CommentAdd(cmd.Context(), req)
@@ -552,11 +634,9 @@ func cmdCommentAdd(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pNodeID, "node_id", "", "Node id")
-	_ = cmd.MarkFlagRequired("node_id")
-	flags.StringVar(&pBody, "body", "", "Body")
-	_ = cmd.MarkFlagRequired("body")
-	flags.StringVar(&pParentID, "parent_id", "", "For a threaded reply")
+	flags.StringVarP(&pNodeID, "node_id", "n", "", "Node id")
+	flags.StringVarP(&pBody, "body", "b", "", "Body")
+	flags.StringVarP(&pParentID, "parent_id", "p", "", "For a threaded reply")
 	return cmd
 }
 
@@ -567,6 +647,12 @@ func cmdCommentDelete(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "delete",
 		Short: "Delete",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("id") {
+				pID = args[0]
+			}
+			if !cmd.Flags().Changed("id") && pID == "" {
+				return fmt.Errorf("required flag --id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -581,8 +667,7 @@ func cmdCommentDelete(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pID, "id", "", "Comment id")
-	_ = cmd.MarkFlagRequired("id")
+	flags.StringVarP(&pID, "id", "i", "", "Comment id")
 	return cmd
 }
 
@@ -594,6 +679,18 @@ func cmdCommentEdit(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "edit",
 		Short: "Edit",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("id") {
+				pID = args[0]
+			}
+			if len(args) > 1 && !cmd.Flags().Changed("body") {
+				pBody = args[1]
+			}
+			if !cmd.Flags().Changed("id") && pID == "" {
+				return fmt.Errorf("required flag --id (or positional argument) is missing")
+			}
+			if !cmd.Flags().Changed("body") && pBody == "" {
+				return fmt.Errorf("required flag --body (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -609,10 +706,8 @@ func cmdCommentEdit(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pID, "id", "", "Comment id")
-	_ = cmd.MarkFlagRequired("id")
-	flags.StringVar(&pBody, "body", "", "Body")
-	_ = cmd.MarkFlagRequired("body")
+	flags.StringVarP(&pID, "id", "i", "", "Comment id")
+	flags.StringVarP(&pBody, "body", "b", "", "Body")
 	return cmd
 }
 
@@ -623,6 +718,12 @@ func cmdCommentList(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "list",
 		Short: "List",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("node_id") {
+				pNodeID = args[0]
+			}
+			if !cmd.Flags().Changed("node_id") && pNodeID == "" {
+				return fmt.Errorf("required flag --node_id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -637,8 +738,7 @@ func cmdCommentList(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pNodeID, "node_id", "", "Node id")
-	_ = cmd.MarkFlagRequired("node_id")
+	flags.StringVarP(&pNodeID, "node_id", "n", "", "Node id")
 	return cmd
 }
 
@@ -649,12 +749,15 @@ func cmdEventChanges(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "changes",
 		Short: "Changes",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("since") {
+				pSince = args[0]
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
 			}
 			var req client.EventChangesParams
-			if cmd.Flags().Changed("since") {
+			if cmd.Flags().Changed("since") || pSince != "" {
 				req.Since = &pSince
 			}
 			resp, err := c.EventChanges(cmd.Context(), req)
@@ -665,7 +768,7 @@ func cmdEventChanges(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pSince, "since", "", "RFC3339Nano cursor; empty = full")
+	flags.StringVarP(&pSince, "since", "s", "", "RFC3339Nano cursor; empty = full")
 	return cmd
 }
 
@@ -676,6 +779,12 @@ func cmdEventDelete(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "delete",
 		Short: "Delete",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("node_id") {
+				pNodeID = args[0]
+			}
+			if !cmd.Flags().Changed("node_id") && pNodeID == "" {
+				return fmt.Errorf("required flag --node_id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -690,8 +799,7 @@ func cmdEventDelete(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pNodeID, "node_id", "", "Node id")
-	_ = cmd.MarkFlagRequired("node_id")
+	flags.StringVarP(&pNodeID, "node_id", "n", "", "Node id")
 	return cmd
 }
 
@@ -702,6 +810,12 @@ func cmdEventGet(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "get",
 		Short: "Get",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("node_id") {
+				pNodeID = args[0]
+			}
+			if !cmd.Flags().Changed("node_id") && pNodeID == "" {
+				return fmt.Errorf("required flag --node_id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -716,8 +830,7 @@ func cmdEventGet(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pNodeID, "node_id", "", "Node id")
-	_ = cmd.MarkFlagRequired("node_id")
+	flags.StringVarP(&pNodeID, "node_id", "n", "", "Node id")
 	return cmd
 }
 
@@ -728,6 +841,12 @@ func cmdEventHistory(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "history",
 		Short: "History",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("node_id") {
+				pNodeID = args[0]
+			}
+			if !cmd.Flags().Changed("node_id") && pNodeID == "" {
+				return fmt.Errorf("required flag --node_id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -742,8 +861,7 @@ func cmdEventHistory(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pNodeID, "node_id", "", "Node id")
-	_ = cmd.MarkFlagRequired("node_id")
+	flags.StringVarP(&pNodeID, "node_id", "n", "", "Node id")
 	return cmd
 }
 
@@ -763,35 +881,44 @@ func cmdEventPatch(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "patch",
 		Short: "Patch",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("node_id") {
+				pNodeID = args[0]
+			}
+			if len(args) > 1 && !cmd.Flags().Changed("start_at") {
+				pStartAt = args[1]
+			}
+			if !cmd.Flags().Changed("node_id") && pNodeID == "" {
+				return fmt.Errorf("required flag --node_id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
 			}
 			var req client.EventPatchParams
 			req.NodeID = pNodeID
-			if cmd.Flags().Changed("start_at") {
+			if cmd.Flags().Changed("start_at") || pStartAt != "" {
 				req.StartAt = &pStartAt
 			}
-			if cmd.Flags().Changed("end_at") {
+			if cmd.Flags().Changed("end_at") || pEndAt != "" {
 				req.EndAt = &pEndAt
 			}
 			if cmd.Flags().Changed("all_day") {
 				req.AllDay = &pAllDay
 			}
-			if cmd.Flags().Changed("tz") {
+			if cmd.Flags().Changed("tz") || pTz != "" {
 				req.Tz = &pTz
 			}
-			if cmd.Flags().Changed("rrule") {
+			if cmd.Flags().Changed("rrule") || pRrule != "" {
 				req.Rrule = &pRrule
 			}
-			if cmd.Flags().Changed("location") {
+			if cmd.Flags().Changed("location") || pLocation != "" {
 				req.Location = &pLocation
 			}
-			if cmd.Flags().Changed("color") {
+			if cmd.Flags().Changed("color") || pColor != "" {
 				req.Color = &pColor
 			}
 			req.Assignee = pAssignee
-			if cmd.Flags().Changed("base_updated_at") {
+			if cmd.Flags().Changed("base_updated_at") || pBaseUpdatedAt != "" {
 				req.BaseUpdatedAt = &pBaseUpdatedAt
 			}
 			resp, err := c.EventPatch(cmd.Context(), req)
@@ -802,17 +929,16 @@ func cmdEventPatch(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pNodeID, "node_id", "", "Node id")
-	_ = cmd.MarkFlagRequired("node_id")
-	flags.StringVar(&pStartAt, "start_at", "", "Start")
-	flags.StringVar(&pEndAt, "end_at", "", "End")
-	flags.BoolVar(&pAllDay, "all_day", false, "All day")
-	flags.StringVar(&pTz, "tz", "", "Timezone")
-	flags.StringVar(&pRrule, "rrule", "", "Recurrence")
-	flags.StringVar(&pLocation, "location", "", "Location")
-	flags.StringVar(&pColor, "color", "", "Color")
-	flags.StringSliceVar(&pAssignee, "assignee", nil, "Assignee")
-	flags.StringVar(&pBaseUpdatedAt, "base_updated_at", "", "Base updated_at")
+	flags.StringVarP(&pNodeID, "node_id", "n", "", "Node id")
+	flags.StringVarP(&pStartAt, "start_at", "s", "", "Start")
+	flags.StringVarP(&pEndAt, "end_at", "e", "", "End")
+	flags.BoolVarP(&pAllDay, "all_day", "a", false, "All day")
+	flags.StringVarP(&pTz, "tz", "t", "", "Timezone")
+	flags.StringVarP(&pRrule, "rrule", "r", "", "Recurrence")
+	flags.StringVarP(&pLocation, "location", "l", "", "Location")
+	flags.StringVarP(&pColor, "color", "c", "", "Color")
+	flags.StringSliceVarP(&pAssignee, "assignee", "i", nil, "Assignee")
+	flags.StringVarP(&pBaseUpdatedAt, "base_updated_at", "b", "", "Base updated_at")
 	return cmd
 }
 
@@ -824,6 +950,18 @@ func cmdEventRestore(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "restore",
 		Short: "Restore",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("node_id") {
+				pNodeID = args[0]
+			}
+			if len(args) > 1 && !cmd.Flags().Changed("rev_id") {
+				pRevID = args[1]
+			}
+			if !cmd.Flags().Changed("node_id") && pNodeID == "" {
+				return fmt.Errorf("required flag --node_id (or positional argument) is missing")
+			}
+			if !cmd.Flags().Changed("rev_id") && pRevID == "" {
+				return fmt.Errorf("required flag --rev_id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -839,10 +977,8 @@ func cmdEventRestore(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pNodeID, "node_id", "", "Node id")
-	_ = cmd.MarkFlagRequired("node_id")
-	flags.StringVar(&pRevID, "rev_id", "", "Revision id")
-	_ = cmd.MarkFlagRequired("rev_id")
+	flags.StringVarP(&pNodeID, "node_id", "n", "", "Node id")
+	flags.StringVarP(&pRevID, "rev_id", "r", "", "Revision id")
 	return cmd
 }
 
@@ -862,35 +998,44 @@ func cmdEventSet(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "set",
 		Short: "Set",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("node_id") {
+				pNodeID = args[0]
+			}
+			if len(args) > 1 && !cmd.Flags().Changed("start_at") {
+				pStartAt = args[1]
+			}
+			if !cmd.Flags().Changed("node_id") && pNodeID == "" {
+				return fmt.Errorf("required flag --node_id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
 			}
 			var req client.EventSetParams
 			req.NodeID = pNodeID
-			if cmd.Flags().Changed("start_at") {
+			if cmd.Flags().Changed("start_at") || pStartAt != "" {
 				req.StartAt = &pStartAt
 			}
-			if cmd.Flags().Changed("end_at") {
+			if cmd.Flags().Changed("end_at") || pEndAt != "" {
 				req.EndAt = &pEndAt
 			}
 			if cmd.Flags().Changed("all_day") {
 				req.AllDay = &pAllDay
 			}
-			if cmd.Flags().Changed("tz") {
+			if cmd.Flags().Changed("tz") || pTz != "" {
 				req.Tz = &pTz
 			}
-			if cmd.Flags().Changed("rrule") {
+			if cmd.Flags().Changed("rrule") || pRrule != "" {
 				req.Rrule = &pRrule
 			}
-			if cmd.Flags().Changed("location") {
+			if cmd.Flags().Changed("location") || pLocation != "" {
 				req.Location = &pLocation
 			}
-			if cmd.Flags().Changed("color") {
+			if cmd.Flags().Changed("color") || pColor != "" {
 				req.Color = &pColor
 			}
 			req.Assignee = pAssignee
-			if cmd.Flags().Changed("base_updated_at") {
+			if cmd.Flags().Changed("base_updated_at") || pBaseUpdatedAt != "" {
 				req.BaseUpdatedAt = &pBaseUpdatedAt
 			}
 			resp, err := c.EventSet(cmd.Context(), req)
@@ -901,17 +1046,16 @@ func cmdEventSet(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pNodeID, "node_id", "", "Node id")
-	_ = cmd.MarkFlagRequired("node_id")
-	flags.StringVar(&pStartAt, "start_at", "", "local ISO YYYY-MM-DDTHH:MM (or YYYY-MM-DD all-day)")
-	flags.StringVar(&pEndAt, "end_at", "", "local ISO; empty = same as start")
-	flags.BoolVar(&pAllDay, "all_day", false, "All day")
-	flags.StringVar(&pTz, "tz", "", "IANA zone e.g. America/New_York")
-	flags.StringVar(&pRrule, "rrule", "", "RFC-5545 RRULE string")
-	flags.StringVar(&pLocation, "location", "", "Location")
-	flags.StringVar(&pColor, "color", "", "pigment token (red/blue/...); empty = default")
-	flags.StringSliceVar(&pAssignee, "assignee", nil, "user subjects assigned (like tickets)")
-	flags.StringVar(&pBaseUpdatedAt, "base_updated_at", "", "Optimistic-concurrency token")
+	flags.StringVarP(&pNodeID, "node_id", "n", "", "Node id")
+	flags.StringVarP(&pStartAt, "start_at", "s", "", "local ISO YYYY-MM-DDTHH:MM (or YYYY-MM-DD all-day)")
+	flags.StringVarP(&pEndAt, "end_at", "e", "", "local ISO; empty = same as start")
+	flags.BoolVarP(&pAllDay, "all_day", "a", false, "All day")
+	flags.StringVarP(&pTz, "tz", "t", "", "IANA zone e.g. America/New_York")
+	flags.StringVarP(&pRrule, "rrule", "r", "", "RFC-5545 RRULE string")
+	flags.StringVarP(&pLocation, "location", "l", "", "Location")
+	flags.StringVarP(&pColor, "color", "c", "", "pigment token (red/blue/...); empty = default")
+	flags.StringSliceVarP(&pAssignee, "assignee", "i", nil, "user subjects assigned (like tickets)")
+	flags.StringVarP(&pBaseUpdatedAt, "base_updated_at", "b", "", "Optimistic-concurrency token")
 	return cmd
 }
 
@@ -922,6 +1066,12 @@ func cmdExportPage(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "page",
 		Short: "Page",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("page_id") {
+				pPageID = args[0]
+			}
+			if !cmd.Flags().Changed("page_id") && pPageID == "" {
+				return fmt.Errorf("required flag --page_id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -936,8 +1086,7 @@ func cmdExportPage(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pPageID, "page_id", "", "Page id")
-	_ = cmd.MarkFlagRequired("page_id")
+	flags.StringVarP(&pPageID, "page_id", "p", "", "Page id")
 	return cmd
 }
 
@@ -948,12 +1097,15 @@ func cmdExportPrepare(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "prepare",
 		Short: "Prepare",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("root_id") {
+				pRootID = args[0]
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
 			}
 			var req client.ExportPrepareParams
-			if cmd.Flags().Changed("root_id") {
+			if cmd.Flags().Changed("root_id") || pRootID != "" {
 				req.RootID = &pRootID
 			}
 			resp, err := c.ExportPrepare(cmd.Context(), req)
@@ -964,7 +1116,7 @@ func cmdExportPrepare(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pRootID, "root_id", "", "Root id")
+	flags.StringVarP(&pRootID, "root_id", "r", "", "Root id")
 	return cmd
 }
 
@@ -975,6 +1127,12 @@ func cmdHistoryList(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "list",
 		Short: "List",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("page_id") {
+				pPageID = args[0]
+			}
+			if !cmd.Flags().Changed("page_id") && pPageID == "" {
+				return fmt.Errorf("required flag --page_id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -989,8 +1147,7 @@ func cmdHistoryList(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pPageID, "page_id", "", "Page id")
-	_ = cmd.MarkFlagRequired("page_id")
+	flags.StringVarP(&pPageID, "page_id", "p", "", "Page id")
 	return cmd
 }
 
@@ -1002,6 +1159,18 @@ func cmdHistoryRestore(getClient func() (*client.Client, error)) *cobra.Command 
 		Use:   "restore",
 		Short: "Restore",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("page_id") {
+				pPageID = args[0]
+			}
+			if len(args) > 1 && !cmd.Flags().Changed("rev_id") {
+				pRevID = args[1]
+			}
+			if !cmd.Flags().Changed("page_id") && pPageID == "" {
+				return fmt.Errorf("required flag --page_id (or positional argument) is missing")
+			}
+			if !cmd.Flags().Changed("rev_id") && pRevID == "" {
+				return fmt.Errorf("required flag --rev_id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -1017,10 +1186,8 @@ func cmdHistoryRestore(getClient func() (*client.Client, error)) *cobra.Command 
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pPageID, "page_id", "", "Page id")
-	_ = cmd.MarkFlagRequired("page_id")
-	flags.StringVar(&pRevID, "rev_id", "", "Revision id")
-	_ = cmd.MarkFlagRequired("rev_id")
+	flags.StringVarP(&pPageID, "page_id", "p", "", "Page id")
+	flags.StringVarP(&pRevID, "rev_id", "r", "", "Revision id")
 	return cmd
 }
 
@@ -1031,6 +1198,12 @@ func cmdHistoryRevision(getClient func() (*client.Client, error)) *cobra.Command
 		Use:   "revision",
 		Short: "Revision",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("rev_id") {
+				pRevID = args[0]
+			}
+			if !cmd.Flags().Changed("rev_id") && pRevID == "" {
+				return fmt.Errorf("required flag --rev_id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -1045,8 +1218,7 @@ func cmdHistoryRevision(getClient func() (*client.Client, error)) *cobra.Command
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pRevID, "rev_id", "", "Revision id")
-	_ = cmd.MarkFlagRequired("rev_id")
+	flags.StringVarP(&pRevID, "rev_id", "r", "", "Revision id")
 	return cmd
 }
 
@@ -1057,12 +1229,15 @@ func cmdPageChanges(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "changes",
 		Short: "Changes",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("since") {
+				pSince = args[0]
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
 			}
 			var req client.PageChangesParams
-			if cmd.Flags().Changed("since") {
+			if cmd.Flags().Changed("since") || pSince != "" {
 				req.Since = &pSince
 			}
 			resp, err := c.PageChanges(cmd.Context(), req)
@@ -1073,7 +1248,7 @@ func cmdPageChanges(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pSince, "since", "", "RFC3339Nano updated_at watermark; empty = full pull")
+	flags.StringVarP(&pSince, "since", "s", "", "RFC3339Nano updated_at watermark; empty = full pull")
 	return cmd
 }
 
@@ -1084,6 +1259,12 @@ func cmdPageClone(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "clone",
 		Short: "Clone",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("id") {
+				pID = args[0]
+			}
+			if !cmd.Flags().Changed("id") && pID == "" {
+				return fmt.Errorf("required flag --id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -1098,8 +1279,7 @@ func cmdPageClone(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pID, "id", "", "Page id")
-	_ = cmd.MarkFlagRequired("id")
+	flags.StringVarP(&pID, "id", "i", "", "Page id")
 	return cmd
 }
 
@@ -1116,30 +1296,36 @@ func cmdPageCreate(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "create",
 		Short: "Create",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("parent_id") {
+				pParentID = args[0]
+			}
+			if len(args) > 1 && !cmd.Flags().Changed("title") {
+				pTitle = args[1]
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
 			}
 			var req client.PageCreateParams
-			if cmd.Flags().Changed("parent_id") {
+			if cmd.Flags().Changed("parent_id") || pParentID != "" {
 				req.ParentID = &pParentID
 			}
-			if cmd.Flags().Changed("title") {
+			if cmd.Flags().Changed("title") || pTitle != "" {
 				req.Title = &pTitle
 			}
-			if cmd.Flags().Changed("body") {
+			if cmd.Flags().Changed("body") || pBody != "" {
 				req.Body = &pBody
 			}
-			if cmd.Flags().Changed("kind") {
+			if cmd.Flags().Changed("kind") || pKind != "" {
 				req.Kind = &pKind
 			}
-			if cmd.Flags().Changed("alias_id") {
+			if cmd.Flags().Changed("alias_id") || pAliasID != "" {
 				req.AliasID = &pAliasID
 			}
 			if cmd.Flags().Changed("position") {
 				req.Position = &pPosition
 			}
-			if cmd.Flags().Changed("client_id") {
+			if cmd.Flags().Changed("client_id") || pClientID != "" {
 				req.ClientID = &pClientID
 			}
 			resp, err := c.PageCreate(cmd.Context(), req)
@@ -1150,13 +1336,13 @@ func cmdPageCreate(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pParentID, "parent_id", "", "Empty for a root page")
-	flags.StringVar(&pTitle, "title", "", "Title")
-	flags.StringVar(&pBody, "body", "", "Body")
-	flags.StringVar(&pKind, "kind", "", "page or folder; example: page")
-	flags.StringVar(&pAliasID, "alias_id", "", "Target id when kind=alias")
-	flags.Float64Var(&pPosition, "position", 0, "Position")
-	flags.StringVar(&pClientID, "client_id", "", "Optional offline-minted correlation id")
+	flags.StringVarP(&pParentID, "parent_id", "p", "", "Empty for a root page")
+	flags.StringVarP(&pTitle, "title", "t", "", "Title")
+	flags.StringVarP(&pBody, "body", "b", "", "Body")
+	flags.StringVarP(&pKind, "kind", "k", "", "page or folder; example: page")
+	flags.StringVarP(&pAliasID, "alias_id", "a", "", "Target id when kind=alias")
+	flags.Float64VarP(&pPosition, "position", "o", 0, "Position")
+	flags.StringVarP(&pClientID, "client_id", "c", "", "Optional offline-minted correlation id")
 	return cmd
 }
 
@@ -1167,6 +1353,12 @@ func cmdPageDelete(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "delete",
 		Short: "Delete",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("id") {
+				pID = args[0]
+			}
+			if !cmd.Flags().Changed("id") && pID == "" {
+				return fmt.Errorf("required flag --id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -1181,8 +1373,7 @@ func cmdPageDelete(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pID, "id", "", "Page id")
-	_ = cmd.MarkFlagRequired("id")
+	flags.StringVarP(&pID, "id", "i", "", "Page id")
 	return cmd
 }
 
@@ -1193,6 +1384,12 @@ func cmdPageExport(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "export",
 		Short: "Export",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("id") {
+				pID = args[0]
+			}
+			if !cmd.Flags().Changed("id") && pID == "" {
+				return fmt.Errorf("required flag --id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -1207,8 +1404,7 @@ func cmdPageExport(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pID, "id", "", "Page id")
-	_ = cmd.MarkFlagRequired("id")
+	flags.StringVarP(&pID, "id", "i", "", "Page id")
 	return cmd
 }
 
@@ -1239,6 +1435,12 @@ func cmdPageGet(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "get",
 		Short: "Get",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("id") {
+				pID = args[0]
+			}
+			if !cmd.Flags().Changed("id") && pID == "" {
+				return fmt.Errorf("required flag --id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -1253,8 +1455,7 @@ func cmdPageGet(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pID, "id", "", "Page id")
-	_ = cmd.MarkFlagRequired("id")
+	flags.StringVarP(&pID, "id", "i", "", "Page id")
 	return cmd
 }
 
@@ -1267,6 +1468,15 @@ func cmdPageImport(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "import",
 		Short: "Import",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("files") {
+				pFiles = args[0]
+			}
+			if len(args) > 1 && !cmd.Flags().Changed("mode") {
+				pMode = args[1]
+			}
+			if !cmd.Flags().Changed("files") && pFiles == "" {
+				return fmt.Errorf("required flag --files (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -1275,7 +1485,7 @@ func cmdPageImport(getClient func() (*client.Client, error)) *cobra.Command {
 			if err := json.Unmarshal([]byte(pFiles), &req.Files); err != nil {
 				return fmt.Errorf("files: invalid JSON: %w", err)
 			}
-			if cmd.Flags().Changed("mode") {
+			if cmd.Flags().Changed("mode") || pMode != "" {
 				req.Mode = &pMode
 			}
 			if cmd.Flags().Changed("dry_run") {
@@ -1289,10 +1499,9 @@ func cmdPageImport(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pFiles, "files", "", "Files; JSON")
-	_ = cmd.MarkFlagRequired("files")
-	flags.StringVar(&pMode, "mode", "", "replace updates a matched page (history saved); anything else creates a copy")
-	flags.BoolVar(&pDryRun, "dry_run", false, "Compute the create/replace plan without writing")
+	flags.StringVarP(&pFiles, "files", "f", "", "Files; JSON")
+	flags.StringVarP(&pMode, "mode", "m", "", "replace updates a matched page (history saved); anything else creates a copy")
+	flags.BoolVarP(&pDryRun, "dry_run", "d", false, "Compute the create/replace plan without writing")
 	return cmd
 }
 
@@ -1303,12 +1512,15 @@ func cmdPageListPrefix(getClient func() (*client.Client, error)) *cobra.Command 
 		Use:   "listPrefix",
 		Short: "List prefix",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("path") {
+				pPath = args[0]
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
 			}
 			var req client.PageListPrefixParams
-			if cmd.Flags().Changed("path") {
+			if cmd.Flags().Changed("path") || pPath != "" {
 				req.Path = &pPath
 			}
 			resp, err := c.PageListPrefix(cmd.Context(), req)
@@ -1319,7 +1531,7 @@ func cmdPageListPrefix(getClient func() (*client.Client, error)) *cobra.Command 
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pPath, "path", "", "Prefix path to list under; empty = the root; example: docs/api")
+	flags.StringVarP(&pPath, "path", "p", "", "Prefix path to list under; empty = the root; example: docs/api")
 	return cmd
 }
 
@@ -1330,6 +1542,12 @@ func cmdPagePathOf(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "pathOf",
 		Short: "Path of",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("id") {
+				pID = args[0]
+			}
+			if !cmd.Flags().Changed("id") && pID == "" {
+				return fmt.Errorf("required flag --id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -1344,8 +1562,7 @@ func cmdPagePathOf(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pID, "id", "", "Page id")
-	_ = cmd.MarkFlagRequired("id")
+	flags.StringVarP(&pID, "id", "i", "", "Page id")
 	return cmd
 }
 
@@ -1356,6 +1573,9 @@ func cmdPageRefs(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "refs",
 		Short: "Refs",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if !cmd.Flags().Changed("ids") {
+				return fmt.Errorf("required flag --ids is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -1370,8 +1590,7 @@ func cmdPageRefs(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringSliceVar(&pIds, "ids", nil, "Page ids")
-	_ = cmd.MarkFlagRequired("ids")
+	flags.StringSliceVarP(&pIds, "ids", "i", nil, "Page ids")
 	return cmd
 }
 
@@ -1382,6 +1601,12 @@ func cmdPageResolvePath(getClient func() (*client.Client, error)) *cobra.Command
 		Use:   "resolvePath",
 		Short: "Resolve path",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("path") {
+				pPath = args[0]
+			}
+			if !cmd.Flags().Changed("path") && pPath == "" {
+				return fmt.Errorf("required flag --path (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -1396,8 +1621,7 @@ func cmdPageResolvePath(getClient func() (*client.Client, error)) *cobra.Command
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pPath, "path", "", "Slash slug path to resolve to a node; example: docs/api/auth")
-	_ = cmd.MarkFlagRequired("path")
+	flags.StringVarP(&pPath, "path", "p", "", "Slash slug path to resolve to a node; example: docs/api/auth")
 	return cmd
 }
 
@@ -1435,33 +1659,42 @@ func cmdPageUpdate(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "update",
 		Short: "Update",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("id") {
+				pID = args[0]
+			}
+			if len(args) > 1 && !cmd.Flags().Changed("title") {
+				pTitle = args[1]
+			}
+			if !cmd.Flags().Changed("id") && pID == "" {
+				return fmt.Errorf("required flag --id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
 			}
 			var req client.PageUpdateParams
 			req.ID = pID
-			if cmd.Flags().Changed("title") {
+			if cmd.Flags().Changed("title") || pTitle != "" {
 				req.Title = &pTitle
 			}
-			if cmd.Flags().Changed("body") {
+			if cmd.Flags().Changed("body") || pBody != "" {
 				req.Body = &pBody
 			}
 			if cmd.Flags().Changed("position") {
 				req.Position = &pPosition
 			}
-			if cmd.Flags().Changed("parent_id") {
+			if cmd.Flags().Changed("parent_id") || pParentID != "" {
 				req.ParentID = &pParentID
 			}
-			if cmd.Flags().Changed("kind") {
+			if cmd.Flags().Changed("kind") || pKind != "" {
 				req.Kind = &pKind
 			}
-			if cmd.Flags().Changed("config") {
+			if cmd.Flags().Changed("config") || pConfig != "" {
 				if err := json.Unmarshal([]byte(pConfig), &req.Config); err != nil {
 					return fmt.Errorf("config: invalid JSON: %w", err)
 				}
 			}
-			if cmd.Flags().Changed("base_updated_at") {
+			if cmd.Flags().Changed("base_updated_at") || pBaseUpdatedAt != "" {
 				req.BaseUpdatedAt = &pBaseUpdatedAt
 			}
 			resp, err := c.PageUpdate(cmd.Context(), req)
@@ -1472,15 +1705,14 @@ func cmdPageUpdate(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pID, "id", "", "Page id")
-	_ = cmd.MarkFlagRequired("id")
-	flags.StringVar(&pTitle, "title", "", "Title")
-	flags.StringVar(&pBody, "body", "", "Body")
-	flags.Float64Var(&pPosition, "position", 0, "Position")
-	flags.StringVar(&pParentID, "parent_id", "", "Empty string detaches to root")
-	flags.StringVar(&pKind, "kind", "", "page or folder or ticket")
-	flags.StringVar(&pConfig, "config", "", "Reading width and flags; JSON")
-	flags.StringVar(&pBaseUpdatedAt, "base_updated_at", "", "Optimistic-concurrency token")
+	flags.StringVarP(&pID, "id", "i", "", "Page id")
+	flags.StringVarP(&pTitle, "title", "t", "", "Title")
+	flags.StringVarP(&pBody, "body", "b", "", "Body")
+	flags.Float64VarP(&pPosition, "position", "p", 0, "Position")
+	flags.StringVarP(&pParentID, "parent_id", "a", "", "Empty string detaches to root")
+	flags.StringVarP(&pKind, "kind", "k", "", "page or folder or ticket")
+	flags.StringVarP(&pConfig, "config", "c", "", "Reading width and flags; JSON")
+	flags.StringVarP(&pBaseUpdatedAt, "base_updated_at", "s", "", "Optimistic-concurrency token")
 	return cmd
 }
 
@@ -1493,16 +1725,25 @@ func cmdPageUpsert(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "upsert",
 		Short: "Upsert",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("path") {
+				pPath = args[0]
+			}
+			if len(args) > 1 && !cmd.Flags().Changed("title") {
+				pTitle = args[1]
+			}
+			if !cmd.Flags().Changed("path") && pPath == "" {
+				return fmt.Errorf("required flag --path (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
 			}
 			var req client.PageUpsertParams
 			req.Path = pPath
-			if cmd.Flags().Changed("title") {
+			if cmd.Flags().Changed("title") || pTitle != "" {
 				req.Title = &pTitle
 			}
-			if cmd.Flags().Changed("body") {
+			if cmd.Flags().Changed("body") || pBody != "" {
 				req.Body = &pBody
 			}
 			resp, err := c.PageUpsert(cmd.Context(), req)
@@ -1513,10 +1754,9 @@ func cmdPageUpsert(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pPath, "path", "", "Slash-separated slug path; intermediates become folders. e.g. docs/api/auth; example: docs/api/auth")
-	_ = cmd.MarkFlagRequired("path")
-	flags.StringVar(&pTitle, "title", "", "Display title for the leaf page (slug stays the stable key)")
-	flags.StringVar(&pBody, "body", "", "Markdown body")
+	flags.StringVarP(&pPath, "path", "p", "", "Slash-separated slug path; intermediates become folders. e.g. docs/api/auth; example: docs/api/auth")
+	flags.StringVarP(&pTitle, "title", "t", "", "Display title for the leaf page (slug stays the stable key)")
+	flags.StringVarP(&pBody, "body", "b", "", "Markdown body")
 	return cmd
 }
 
@@ -1530,19 +1770,25 @@ func cmdSearchQuery(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "query",
 		Short: "Query",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("query") {
+				pQuery = args[0]
+			}
+			if len(args) > 1 && !cmd.Flags().Changed("scope_root") {
+				pScopeRoot = args[1]
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
 			}
 			var req client.SearchQueryParams
-			if cmd.Flags().Changed("query") {
+			if cmd.Flags().Changed("query") || pQuery != "" {
 				req.Query = &pQuery
 			}
 			if cmd.Flags().Changed("limit") {
 				req.Limit = &pLimit
 			}
 			req.Kinds = pKinds
-			if cmd.Flags().Changed("scope_root") {
+			if cmd.Flags().Changed("scope_root") || pScopeRoot != "" {
 				req.ScopeRoot = &pScopeRoot
 			}
 			resp, err := c.SearchQuery(cmd.Context(), req)
@@ -1553,10 +1799,10 @@ func cmdSearchQuery(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pQuery, "query", "", "Full-text search over your pages")
-	flags.Float64Var(&pLimit, "limit", 0, "Max results")
-	flags.StringSliceVar(&pKinds, "kinds", nil, "Filter by node kind")
-	flags.StringVar(&pScopeRoot, "scope_root", "", "Restrict to a folder's subtree")
+	flags.StringVarP(&pQuery, "query", "q", "", "Full-text search over your pages")
+	flags.Float64VarP(&pLimit, "limit", "l", 0, "Max results")
+	flags.StringSliceVarP(&pKinds, "kinds", "k", nil, "Filter by node kind")
+	flags.StringVarP(&pScopeRoot, "scope_root", "s", "", "Restrict to a folder's subtree")
 	return cmd
 }
 
@@ -1591,13 +1837,22 @@ func cmdShareCreate(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "create",
 		Short: "Create",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("page_id") {
+				pPageID = args[0]
+			}
+			if len(args) > 1 && !cmd.Flags().Changed("password") {
+				pPassword = args[1]
+			}
+			if !cmd.Flags().Changed("page_id") && pPageID == "" {
+				return fmt.Errorf("required flag --page_id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
 			}
 			var req client.ShareCreateParams
 			req.PageID = pPageID
-			if cmd.Flags().Changed("password") {
+			if cmd.Flags().Changed("password") || pPassword != "" {
 				req.Password = &pPassword
 			}
 			if cmd.Flags().Changed("allow_fork") {
@@ -1617,12 +1872,11 @@ func cmdShareCreate(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pPageID, "page_id", "", "Page id")
-	_ = cmd.MarkFlagRequired("page_id")
-	flags.StringVar(&pPassword, "password", "", "Optional; protects the share on create")
-	flags.BoolVar(&pAllowFork, "allow_fork", false, "Optional; permit forking on create")
-	flags.BoolVar(&pAllowRaw, "allow_raw", false, "Optional; expose markdown source + tree manifest on create")
-	flags.BoolVar(&pAllowAnnotations, "allow_annotations", false, "Optional; let logged-in visitors annotate on create")
+	flags.StringVarP(&pPageID, "page_id", "p", "", "Page id")
+	flags.StringVarP(&pPassword, "password", "a", "", "Optional; protects the share on create")
+	flags.BoolVarP(&pAllowFork, "allow_fork", "l", false, "Optional; permit forking on create")
+	flags.BoolVarP(&pAllowRaw, "allow_raw", "o", false, "Optional; expose markdown source + tree manifest on create")
+	flags.BoolVarP(&pAllowAnnotations, "allow_annotations", "w", false, "Optional; let logged-in visitors annotate on create")
 	return cmd
 }
 
@@ -1636,19 +1890,28 @@ func cmdShareFork(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "fork",
 		Short: "Fork",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("token") {
+				pToken = args[0]
+			}
+			if len(args) > 1 && !cmd.Flags().Changed("parent_id") {
+				pParentID = args[1]
+			}
+			if !cmd.Flags().Changed("token") && pToken == "" {
+				return fmt.Errorf("required flag --token (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
 			}
 			var req client.ShareForkParams
 			req.Token = pToken
-			if cmd.Flags().Changed("parent_id") {
+			if cmd.Flags().Changed("parent_id") || pParentID != "" {
 				req.ParentID = &pParentID
 			}
-			if cmd.Flags().Changed("lease") {
+			if cmd.Flags().Changed("lease") || pLease != "" {
 				req.Lease = &pLease
 			}
-			if cmd.Flags().Changed("workspace_id") {
+			if cmd.Flags().Changed("workspace_id") || pWorkspaceID != "" {
 				req.WorkspaceID = &pWorkspaceID
 			}
 			resp, err := c.ShareFork(cmd.Context(), req)
@@ -1659,11 +1922,10 @@ func cmdShareFork(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pToken, "token", "", "Share token")
-	_ = cmd.MarkFlagRequired("token")
-	flags.StringVar(&pParentID, "parent_id", "", "The caller's folder to fork into; empty = root")
-	flags.StringVar(&pLease, "lease", "", "Required to fork a password-protected share")
-	flags.StringVar(&pWorkspaceID, "workspace_id", "", "Which workspace to fork into; empty = active")
+	flags.StringVarP(&pToken, "token", "t", "", "Share token")
+	flags.StringVarP(&pParentID, "parent_id", "p", "", "The caller's folder to fork into; empty = root")
+	flags.StringVarP(&pLease, "lease", "l", "", "Required to fork a password-protected share")
+	flags.StringVarP(&pWorkspaceID, "workspace_id", "w", "", "Which workspace to fork into; empty = active")
 	return cmd
 }
 
@@ -1674,6 +1936,12 @@ func cmdShareForkInfo(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "forkInfo",
 		Short: "Fork info",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("root_id") {
+				pRootID = args[0]
+			}
+			if !cmd.Flags().Changed("root_id") && pRootID == "" {
+				return fmt.Errorf("required flag --root_id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -1688,8 +1956,7 @@ func cmdShareForkInfo(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pRootID, "root_id", "", "Fork root page id")
-	_ = cmd.MarkFlagRequired("root_id")
+	flags.StringVarP(&pRootID, "root_id", "r", "", "Fork root page id")
 	return cmd
 }
 
@@ -1701,13 +1968,22 @@ func cmdShareGet(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "get",
 		Short: "Get",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("token") {
+				pToken = args[0]
+			}
+			if len(args) > 1 && !cmd.Flags().Changed("lease") {
+				pLease = args[1]
+			}
+			if !cmd.Flags().Changed("token") && pToken == "" {
+				return fmt.Errorf("required flag --token (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
 			}
 			var req client.ShareGetParams
 			req.Token = pToken
-			if cmd.Flags().Changed("lease") {
+			if cmd.Flags().Changed("lease") || pLease != "" {
 				req.Lease = &pLease
 			}
 			resp, err := c.ShareGet(cmd.Context(), req)
@@ -1718,9 +1994,8 @@ func cmdShareGet(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pToken, "token", "", "Share token")
-	_ = cmd.MarkFlagRequired("token")
-	flags.StringVar(&pLease, "lease", "", "Lease token from Share/unlock (protected shares)")
+	flags.StringVarP(&pToken, "token", "t", "", "Share token")
+	flags.StringVarP(&pLease, "lease", "l", "", "Lease token from Share/unlock (protected shares)")
 	return cmd
 }
 
@@ -1771,6 +2046,12 @@ func cmdShareRevoke(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "revoke",
 		Short: "Revoke",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("page_id") {
+				pPageID = args[0]
+			}
+			if !cmd.Flags().Changed("page_id") && pPageID == "" {
+				return fmt.Errorf("required flag --page_id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -1785,8 +2066,7 @@ func cmdShareRevoke(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pPageID, "page_id", "", "Page id")
-	_ = cmd.MarkFlagRequired("page_id")
+	flags.StringVarP(&pPageID, "page_id", "p", "", "Page id")
 	return cmd
 }
 
@@ -1798,6 +2078,12 @@ func cmdShareSetAnnotations(getClient func() (*client.Client, error)) *cobra.Com
 		Use:   "setAnnotations",
 		Short: "Set annotations",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("page_id") {
+				pPageID = args[0]
+			}
+			if !cmd.Flags().Changed("page_id") && pPageID == "" {
+				return fmt.Errorf("required flag --page_id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -1815,9 +2101,8 @@ func cmdShareSetAnnotations(getClient func() (*client.Client, error)) *cobra.Com
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pPageID, "page_id", "", "Page id")
-	_ = cmd.MarkFlagRequired("page_id")
-	flags.BoolVar(&pAllow, "allow", false, "Allow annotations")
+	flags.StringVarP(&pPageID, "page_id", "p", "", "Page id")
+	flags.BoolVarP(&pAllow, "allow", "a", false, "Allow annotations")
 	return cmd
 }
 
@@ -1829,6 +2114,12 @@ func cmdShareSetForkable(getClient func() (*client.Client, error)) *cobra.Comman
 		Use:   "setForkable",
 		Short: "Set forkable",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("page_id") {
+				pPageID = args[0]
+			}
+			if !cmd.Flags().Changed("page_id") && pPageID == "" {
+				return fmt.Errorf("required flag --page_id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -1846,9 +2137,8 @@ func cmdShareSetForkable(getClient func() (*client.Client, error)) *cobra.Comman
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pPageID, "page_id", "", "Page id")
-	_ = cmd.MarkFlagRequired("page_id")
-	flags.BoolVar(&pAllow, "allow", false, "Allow forking")
+	flags.StringVarP(&pPageID, "page_id", "p", "", "Page id")
+	flags.BoolVarP(&pAllow, "allow", "a", false, "Allow forking")
 	return cmd
 }
 
@@ -1860,13 +2150,22 @@ func cmdShareSetPassword(getClient func() (*client.Client, error)) *cobra.Comman
 		Use:   "setPassword",
 		Short: "Set password",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("page_id") {
+				pPageID = args[0]
+			}
+			if len(args) > 1 && !cmd.Flags().Changed("password") {
+				pPassword = args[1]
+			}
+			if !cmd.Flags().Changed("page_id") && pPageID == "" {
+				return fmt.Errorf("required flag --page_id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
 			}
 			var req client.ShareSetPasswordParams
 			req.PageID = pPageID
-			if cmd.Flags().Changed("password") {
+			if cmd.Flags().Changed("password") || pPassword != "" {
 				req.Password = &pPassword
 			}
 			resp, err := c.ShareSetPassword(cmd.Context(), req)
@@ -1877,9 +2176,8 @@ func cmdShareSetPassword(getClient func() (*client.Client, error)) *cobra.Comman
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pPageID, "page_id", "", "Page id")
-	_ = cmd.MarkFlagRequired("page_id")
-	flags.StringVar(&pPassword, "password", "", "Empty removes protection")
+	flags.StringVarP(&pPageID, "page_id", "p", "", "Page id")
+	flags.StringVarP(&pPassword, "password", "a", "", "Empty removes protection")
 	return cmd
 }
 
@@ -1891,6 +2189,12 @@ func cmdShareSetRSS(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "setRSS",
 		Short: "Set RSS",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("page_id") {
+				pPageID = args[0]
+			}
+			if !cmd.Flags().Changed("page_id") && pPageID == "" {
+				return fmt.Errorf("required flag --page_id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -1908,9 +2212,8 @@ func cmdShareSetRSS(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pPageID, "page_id", "", "Page id")
-	_ = cmd.MarkFlagRequired("page_id")
-	flags.BoolVar(&pAllow, "allow", false, "Allow RSS feed")
+	flags.StringVarP(&pPageID, "page_id", "p", "", "Page id")
+	flags.BoolVarP(&pAllow, "allow", "a", false, "Allow RSS feed")
 	return cmd
 }
 
@@ -1921,6 +2224,12 @@ func cmdShareStatus(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "status",
 		Short: "Status",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("page_id") {
+				pPageID = args[0]
+			}
+			if !cmd.Flags().Changed("page_id") && pPageID == "" {
+				return fmt.Errorf("required flag --page_id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -1935,8 +2244,7 @@ func cmdShareStatus(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pPageID, "page_id", "", "Page id")
-	_ = cmd.MarkFlagRequired("page_id")
+	flags.StringVarP(&pPageID, "page_id", "p", "", "Page id")
 	return cmd
 }
 
@@ -1948,6 +2256,18 @@ func cmdShareUnlock(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "unlock",
 		Short: "Unlock",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("token") {
+				pToken = args[0]
+			}
+			if len(args) > 1 && !cmd.Flags().Changed("password") {
+				pPassword = args[1]
+			}
+			if !cmd.Flags().Changed("token") && pToken == "" {
+				return fmt.Errorf("required flag --token (or positional argument) is missing")
+			}
+			if !cmd.Flags().Changed("password") && pPassword == "" {
+				return fmt.Errorf("required flag --password (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -1963,10 +2283,8 @@ func cmdShareUnlock(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pToken, "token", "", "Share token")
-	_ = cmd.MarkFlagRequired("token")
-	flags.StringVar(&pPassword, "password", "", "Password")
-	_ = cmd.MarkFlagRequired("password")
+	flags.StringVarP(&pToken, "token", "t", "", "Share token")
+	flags.StringVarP(&pPassword, "password", "p", "", "Password")
 	return cmd
 }
 
@@ -1978,12 +2296,21 @@ func cmdTagClearNode(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "clearNode",
 		Short: "Clear node",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("node_id") {
+				pNodeID = args[0]
+			}
+			if len(args) > 1 && !cmd.Flags().Changed("tag_id") {
+				pTagID = args[1]
+			}
+			if !cmd.Flags().Changed("tag_id") && pTagID == "" {
+				return fmt.Errorf("required flag --tag_id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
 			}
 			var req client.TagClearNodeParams
-			if cmd.Flags().Changed("node_id") {
+			if cmd.Flags().Changed("node_id") || pNodeID != "" {
 				req.NodeID = &pNodeID
 			}
 			req.TagID = pTagID
@@ -1995,9 +2322,8 @@ func cmdTagClearNode(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pNodeID, "node_id", "", "Node id")
-	flags.StringVar(&pTagID, "tag_id", "", "Tag id")
-	_ = cmd.MarkFlagRequired("tag_id")
+	flags.StringVarP(&pNodeID, "node_id", "n", "", "Node id")
+	flags.StringVarP(&pTagID, "tag_id", "t", "", "Tag id")
 	return cmd
 }
 
@@ -2010,16 +2336,25 @@ func cmdTagCreate(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "create",
 		Short: "Create",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("name") {
+				pName = args[0]
+			}
+			if len(args) > 1 && !cmd.Flags().Changed("color") {
+				pColor = args[1]
+			}
+			if !cmd.Flags().Changed("name") && pName == "" {
+				return fmt.Errorf("required flag --name (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
 			}
 			var req client.TagCreateParams
 			req.Name = pName
-			if cmd.Flags().Changed("color") {
+			if cmd.Flags().Changed("color") || pColor != "" {
 				req.Color = &pColor
 			}
-			if cmd.Flags().Changed("category") {
+			if cmd.Flags().Changed("category") || pCategory != "" {
 				req.Category = &pCategory
 			}
 			resp, err := c.TagCreate(cmd.Context(), req)
@@ -2030,10 +2365,9 @@ func cmdTagCreate(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pName, "name", "", "Tag name")
-	_ = cmd.MarkFlagRequired("name")
-	flags.StringVar(&pColor, "color", "", "default|red|orange|amber|green|blue|violet")
-	flags.StringVar(&pCategory, "category", "", "facet like type; empty = plain label")
+	flags.StringVarP(&pName, "name", "n", "", "Tag name")
+	flags.StringVarP(&pColor, "color", "c", "", "default|red|orange|amber|green|blue|violet")
+	flags.StringVarP(&pCategory, "category", "a", "", "facet like type; empty = plain label")
 	return cmd
 }
 
@@ -2044,6 +2378,12 @@ func cmdTagDelete(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "delete",
 		Short: "Delete",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("id") {
+				pID = args[0]
+			}
+			if !cmd.Flags().Changed("id") && pID == "" {
+				return fmt.Errorf("required flag --id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -2058,8 +2398,7 @@ func cmdTagDelete(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pID, "id", "", "Tag id")
-	_ = cmd.MarkFlagRequired("id")
+	flags.StringVarP(&pID, "id", "i", "", "Tag id")
 	return cmd
 }
 
@@ -2090,6 +2429,9 @@ func cmdTagReorderGlobal(getClient func() (*client.Client, error)) *cobra.Comman
 		Use:   "reorderGlobal",
 		Short: "Reorder global",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if !cmd.Flags().Changed("tag_ids") {
+				return fmt.Errorf("required flag --tag_ids is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -2104,8 +2446,7 @@ func cmdTagReorderGlobal(getClient func() (*client.Client, error)) *cobra.Comman
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringSliceVar(&pTagIds, "tag_ids", nil, "Tag ids in order")
-	_ = cmd.MarkFlagRequired("tag_ids")
+	flags.StringSliceVarP(&pTagIds, "tag_ids", "t", nil, "Tag ids in order")
 	return cmd
 }
 
@@ -2117,6 +2458,12 @@ func cmdTagReorderNode(getClient func() (*client.Client, error)) *cobra.Command 
 		Use:   "reorderNode",
 		Short: "Reorder node",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("node_id") {
+				pNodeID = args[0]
+			}
+			if !cmd.Flags().Changed("node_id") && pNodeID == "" {
+				return fmt.Errorf("required flag --node_id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -2132,9 +2479,8 @@ func cmdTagReorderNode(getClient func() (*client.Client, error)) *cobra.Command 
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pNodeID, "node_id", "", "Node id")
-	_ = cmd.MarkFlagRequired("node_id")
-	flags.StringSliceVar(&pTagIds, "tag_ids", nil, "Tag ids in order (empty clears the override)")
+	flags.StringVarP(&pNodeID, "node_id", "n", "", "Node id")
+	flags.StringSliceVarP(&pTagIds, "tag_ids", "t", nil, "Tag ids in order (empty clears the override)")
 	return cmd
 }
 
@@ -2147,12 +2493,24 @@ func cmdTagSetNode(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "setNode",
 		Short: "Set node",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("node_id") {
+				pNodeID = args[0]
+			}
+			if len(args) > 1 && !cmd.Flags().Changed("tag_id") {
+				pTagID = args[1]
+			}
+			if !cmd.Flags().Changed("tag_id") && pTagID == "" {
+				return fmt.Errorf("required flag --tag_id (or positional argument) is missing")
+			}
+			if !cmd.Flags().Changed("op") && pOp == "" {
+				return fmt.Errorf("required flag --op (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
 			}
 			var req client.TagSetNodeParams
-			if cmd.Flags().Changed("node_id") {
+			if cmd.Flags().Changed("node_id") || pNodeID != "" {
 				req.NodeID = &pNodeID
 			}
 			req.TagID = pTagID
@@ -2165,11 +2523,9 @@ func cmdTagSetNode(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pNodeID, "node_id", "", "Empty for the global level")
-	flags.StringVar(&pTagID, "tag_id", "", "Tag id")
-	_ = cmd.MarkFlagRequired("tag_id")
-	flags.StringVar(&pOp, "op", "", "add or remove")
-	_ = cmd.MarkFlagRequired("op")
+	flags.StringVarP(&pNodeID, "node_id", "n", "", "Empty for the global level")
+	flags.StringVarP(&pTagID, "tag_id", "t", "", "Tag id")
+	flags.StringVarP(&pOp, "op", "o", "", "add or remove")
 	return cmd
 }
 
@@ -2182,12 +2538,24 @@ func cmdTagSetNodeTags(getClient func() (*client.Client, error)) *cobra.Command 
 		Use:   "setNodeTags",
 		Short: "Set node tags",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("node_id") {
+				pNodeID = args[0]
+			}
+			if len(args) > 1 && !cmd.Flags().Changed("op") {
+				pOp = args[1]
+			}
+			if !cmd.Flags().Changed("tag_ids") {
+				return fmt.Errorf("required flag --tag_ids is missing")
+			}
+			if !cmd.Flags().Changed("op") && pOp == "" {
+				return fmt.Errorf("required flag --op (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
 			}
 			var req client.TagSetNodeTagsParams
-			if cmd.Flags().Changed("node_id") {
+			if cmd.Flags().Changed("node_id") || pNodeID != "" {
 				req.NodeID = &pNodeID
 			}
 			req.TagIds = pTagIds
@@ -2200,11 +2568,9 @@ func cmdTagSetNodeTags(getClient func() (*client.Client, error)) *cobra.Command 
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pNodeID, "node_id", "", "Empty for the global level")
-	flags.StringSliceVar(&pTagIds, "tag_ids", nil, "Tag ids")
-	_ = cmd.MarkFlagRequired("tag_ids")
-	flags.StringVar(&pOp, "op", "", "add or remove")
-	_ = cmd.MarkFlagRequired("op")
+	flags.StringVarP(&pNodeID, "node_id", "n", "", "Empty for the global level")
+	flags.StringSliceVarP(&pTagIds, "tag_ids", "t", nil, "Tag ids")
+	flags.StringVarP(&pOp, "op", "o", "", "add or remove")
 	return cmd
 }
 
@@ -2217,6 +2583,18 @@ func cmdTagUpdate(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "update",
 		Short: "Update",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("id") {
+				pID = args[0]
+			}
+			if len(args) > 1 && !cmd.Flags().Changed("name") {
+				pName = args[1]
+			}
+			if !cmd.Flags().Changed("id") && pID == "" {
+				return fmt.Errorf("required flag --id (or positional argument) is missing")
+			}
+			if !cmd.Flags().Changed("name") && pName == "" {
+				return fmt.Errorf("required flag --name (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -2224,7 +2602,7 @@ func cmdTagUpdate(getClient func() (*client.Client, error)) *cobra.Command {
 			var req client.TagUpdateParams
 			req.ID = pID
 			req.Name = pName
-			if cmd.Flags().Changed("color") {
+			if cmd.Flags().Changed("color") || pColor != "" {
 				req.Color = &pColor
 			}
 			resp, err := c.TagUpdate(cmd.Context(), req)
@@ -2235,11 +2613,9 @@ func cmdTagUpdate(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pID, "id", "", "Tag id")
-	_ = cmd.MarkFlagRequired("id")
-	flags.StringVar(&pName, "name", "", "Tag name")
-	_ = cmd.MarkFlagRequired("name")
-	flags.StringVar(&pColor, "color", "", "Pigment")
+	flags.StringVarP(&pID, "id", "i", "", "Tag id")
+	flags.StringVarP(&pName, "name", "n", "", "Tag name")
+	flags.StringVarP(&pColor, "color", "c", "", "Pigment")
 	return cmd
 }
 
@@ -2254,19 +2630,28 @@ func cmdTemplateInstantiate(getClient func() (*client.Client, error)) *cobra.Com
 		Use:   "instantiate",
 		Short: "Instantiate",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("template_id") {
+				pTemplateID = args[0]
+			}
+			if len(args) > 1 && !cmd.Flags().Changed("parent_id") {
+				pParentID = args[1]
+			}
+			if !cmd.Flags().Changed("template_id") && pTemplateID == "" {
+				return fmt.Errorf("required flag --template_id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
 			}
 			var req client.TemplateInstantiateParams
 			req.TemplateID = pTemplateID
-			if cmd.Flags().Changed("parent_id") {
+			if cmd.Flags().Changed("parent_id") || pParentID != "" {
 				req.ParentID = &pParentID
 			}
-			if cmd.Flags().Changed("kind") {
+			if cmd.Flags().Changed("kind") || pKind != "" {
 				req.Kind = &pKind
 			}
-			if cmd.Flags().Changed("title") {
+			if cmd.Flags().Changed("title") || pTitle != "" {
 				req.Title = &pTitle
 			}
 			if err := json.Unmarshal([]byte(pValues), &req.Values); err != nil {
@@ -2280,12 +2665,11 @@ func cmdTemplateInstantiate(getClient func() (*client.Client, error)) *cobra.Com
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pTemplateID, "template_id", "", "Template id")
-	_ = cmd.MarkFlagRequired("template_id")
-	flags.StringVar(&pParentID, "parent_id", "", "Parent folder id (empty = root)")
-	flags.StringVar(&pKind, "kind", "", "page or ticket (default page)")
-	flags.StringVar(&pTitle, "title", "", "Title")
-	flags.StringVar(&pValues, "values", "", "Field values by name; JSON")
+	flags.StringVarP(&pTemplateID, "template_id", "t", "", "Template id")
+	flags.StringVarP(&pParentID, "parent_id", "p", "", "Parent folder id (empty = root)")
+	flags.StringVarP(&pKind, "kind", "k", "", "page or ticket (default page)")
+	flags.StringVarP(&pTitle, "title", "i", "", "Title")
+	flags.StringVarP(&pValues, "values", "v", "", "Field values by name; JSON")
 	return cmd
 }
 
@@ -2296,12 +2680,15 @@ func cmdTicketChanges(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "changes",
 		Short: "Changes",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("since") {
+				pSince = args[0]
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
 			}
 			var req client.TicketChangesParams
-			if cmd.Flags().Changed("since") {
+			if cmd.Flags().Changed("since") || pSince != "" {
 				req.Since = &pSince
 			}
 			resp, err := c.TicketChanges(cmd.Context(), req)
@@ -2312,7 +2699,7 @@ func cmdTicketChanges(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pSince, "since", "", "RFC3339Nano cursor; empty = full")
+	flags.StringVarP(&pSince, "since", "s", "", "RFC3339Nano cursor; empty = full")
 	return cmd
 }
 
@@ -2323,6 +2710,12 @@ func cmdTicketDelete(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "delete",
 		Short: "Delete",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("node_id") {
+				pNodeID = args[0]
+			}
+			if !cmd.Flags().Changed("node_id") && pNodeID == "" {
+				return fmt.Errorf("required flag --node_id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -2337,8 +2730,7 @@ func cmdTicketDelete(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pNodeID, "node_id", "", "Node id")
-	_ = cmd.MarkFlagRequired("node_id")
+	flags.StringVarP(&pNodeID, "node_id", "n", "", "Node id")
 	return cmd
 }
 
@@ -2349,6 +2741,12 @@ func cmdTicketGet(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "get",
 		Short: "Get",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("node_id") {
+				pNodeID = args[0]
+			}
+			if !cmd.Flags().Changed("node_id") && pNodeID == "" {
+				return fmt.Errorf("required flag --node_id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -2363,8 +2761,7 @@ func cmdTicketGet(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pNodeID, "node_id", "", "Node id")
-	_ = cmd.MarkFlagRequired("node_id")
+	flags.StringVarP(&pNodeID, "node_id", "n", "", "Node id")
 	return cmd
 }
 
@@ -2375,6 +2772,12 @@ func cmdTicketHistory(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "history",
 		Short: "History",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("node_id") {
+				pNodeID = args[0]
+			}
+			if !cmd.Flags().Changed("node_id") && pNodeID == "" {
+				return fmt.Errorf("required flag --node_id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -2389,8 +2792,7 @@ func cmdTicketHistory(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pNodeID, "node_id", "", "Node id")
-	_ = cmd.MarkFlagRequired("node_id")
+	flags.StringVarP(&pNodeID, "node_id", "n", "", "Node id")
 	return cmd
 }
 
@@ -2409,30 +2811,39 @@ func cmdTicketPatch(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "patch",
 		Short: "Patch",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("node_id") {
+				pNodeID = args[0]
+			}
+			if len(args) > 1 && !cmd.Flags().Changed("owner") {
+				pOwner = args[1]
+			}
+			if !cmd.Flags().Changed("node_id") && pNodeID == "" {
+				return fmt.Errorf("required flag --node_id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
 			}
 			var req client.TicketPatchParams
 			req.NodeID = pNodeID
-			if cmd.Flags().Changed("owner") {
+			if cmd.Flags().Changed("owner") || pOwner != "" {
 				req.Owner = &pOwner
 			}
 			req.Type = pType
-			if cmd.Flags().Changed("status") {
+			if cmd.Flags().Changed("status") || pStatus != "" {
 				req.Status = &pStatus
 			}
-			if cmd.Flags().Changed("priority") {
+			if cmd.Flags().Changed("priority") || pPriority != "" {
 				req.Priority = &pPriority
 			}
 			req.Assignee = pAssignee
-			if cmd.Flags().Changed("due") {
+			if cmd.Flags().Changed("due") || pDue != "" {
 				req.Due = &pDue
 			}
-			if cmd.Flags().Changed("estimate") {
+			if cmd.Flags().Changed("estimate") || pEstimate != "" {
 				req.Estimate = &pEstimate
 			}
-			if cmd.Flags().Changed("base_updated_at") {
+			if cmd.Flags().Changed("base_updated_at") || pBaseUpdatedAt != "" {
 				req.BaseUpdatedAt = &pBaseUpdatedAt
 			}
 			resp, err := c.TicketPatch(cmd.Context(), req)
@@ -2443,16 +2854,15 @@ func cmdTicketPatch(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pNodeID, "node_id", "", "Node id")
-	_ = cmd.MarkFlagRequired("node_id")
-	flags.StringVar(&pOwner, "owner", "", "Owner")
-	flags.StringSliceVar(&pType, "type", nil, "Type")
-	flags.StringVar(&pStatus, "status", "", "Status")
-	flags.StringVar(&pPriority, "priority", "", "Priority")
-	flags.StringSliceVar(&pAssignee, "assignee", nil, "Assignee")
-	flags.StringVar(&pDue, "due", "", "Due")
-	flags.StringVar(&pEstimate, "estimate", "", "Estimate")
-	flags.StringVar(&pBaseUpdatedAt, "base_updated_at", "", "Base updated_at")
+	flags.StringVarP(&pNodeID, "node_id", "n", "", "Node id")
+	flags.StringVarP(&pOwner, "owner", "o", "", "Owner")
+	flags.StringSliceVarP(&pType, "type", "t", nil, "Type")
+	flags.StringVarP(&pStatus, "status", "s", "", "Status")
+	flags.StringVarP(&pPriority, "priority", "p", "", "Priority")
+	flags.StringSliceVarP(&pAssignee, "assignee", "a", nil, "Assignee")
+	flags.StringVarP(&pDue, "due", "d", "", "Due")
+	flags.StringVarP(&pEstimate, "estimate", "e", "", "Estimate")
+	flags.StringVarP(&pBaseUpdatedAt, "base_updated_at", "b", "", "Base updated_at")
 	return cmd
 }
 
@@ -2464,6 +2874,18 @@ func cmdTicketRestore(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "restore",
 		Short: "Restore",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("node_id") {
+				pNodeID = args[0]
+			}
+			if len(args) > 1 && !cmd.Flags().Changed("rev_id") {
+				pRevID = args[1]
+			}
+			if !cmd.Flags().Changed("node_id") && pNodeID == "" {
+				return fmt.Errorf("required flag --node_id (or positional argument) is missing")
+			}
+			if !cmd.Flags().Changed("rev_id") && pRevID == "" {
+				return fmt.Errorf("required flag --rev_id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -2479,10 +2901,8 @@ func cmdTicketRestore(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pNodeID, "node_id", "", "Node id")
-	_ = cmd.MarkFlagRequired("node_id")
-	flags.StringVar(&pRevID, "rev_id", "", "Revision id")
-	_ = cmd.MarkFlagRequired("rev_id")
+	flags.StringVarP(&pNodeID, "node_id", "n", "", "Node id")
+	flags.StringVarP(&pRevID, "rev_id", "r", "", "Revision id")
 	return cmd
 }
 
@@ -2501,30 +2921,39 @@ func cmdTicketSet(getClient func() (*client.Client, error)) *cobra.Command {
 		Use:   "set",
 		Short: "Set",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("node_id") {
+				pNodeID = args[0]
+			}
+			if len(args) > 1 && !cmd.Flags().Changed("owner") {
+				pOwner = args[1]
+			}
+			if !cmd.Flags().Changed("node_id") && pNodeID == "" {
+				return fmt.Errorf("required flag --node_id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
 			}
 			var req client.TicketSetParams
 			req.NodeID = pNodeID
-			if cmd.Flags().Changed("owner") {
+			if cmd.Flags().Changed("owner") || pOwner != "" {
 				req.Owner = &pOwner
 			}
 			req.Type = pType
-			if cmd.Flags().Changed("status") {
+			if cmd.Flags().Changed("status") || pStatus != "" {
 				req.Status = &pStatus
 			}
-			if cmd.Flags().Changed("priority") {
+			if cmd.Flags().Changed("priority") || pPriority != "" {
 				req.Priority = &pPriority
 			}
 			req.Assignee = pAssignee
-			if cmd.Flags().Changed("due") {
+			if cmd.Flags().Changed("due") || pDue != "" {
 				req.Due = &pDue
 			}
-			if cmd.Flags().Changed("estimate") {
+			if cmd.Flags().Changed("estimate") || pEstimate != "" {
 				req.Estimate = &pEstimate
 			}
-			if cmd.Flags().Changed("base_updated_at") {
+			if cmd.Flags().Changed("base_updated_at") || pBaseUpdatedAt != "" {
 				req.BaseUpdatedAt = &pBaseUpdatedAt
 			}
 			resp, err := c.TicketSet(cmd.Context(), req)
@@ -2535,16 +2964,15 @@ func cmdTicketSet(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pNodeID, "node_id", "", "Node id")
-	_ = cmd.MarkFlagRequired("node_id")
-	flags.StringVar(&pOwner, "owner", "", "single responsible user id")
-	flags.StringSliceVar(&pType, "type", nil, "tag ids (category type)")
-	flags.StringVar(&pStatus, "status", "", "todo doing or done")
-	flags.StringVar(&pPriority, "priority", "", "low med or high")
-	flags.StringSliceVar(&pAssignee, "assignee", nil, "user ids (a ticket can have many)")
-	flags.StringVar(&pDue, "due", "", "ISO date")
-	flags.StringVar(&pEstimate, "estimate", "", "Estimate")
-	flags.StringVar(&pBaseUpdatedAt, "base_updated_at", "", "Optimistic-concurrency token")
+	flags.StringVarP(&pNodeID, "node_id", "n", "", "Node id")
+	flags.StringVarP(&pOwner, "owner", "o", "", "single responsible user id")
+	flags.StringSliceVarP(&pType, "type", "t", nil, "tag ids (category type)")
+	flags.StringVarP(&pStatus, "status", "s", "", "todo doing or done")
+	flags.StringVarP(&pPriority, "priority", "p", "", "low med or high")
+	flags.StringSliceVarP(&pAssignee, "assignee", "a", nil, "user ids (a ticket can have many)")
+	flags.StringVarP(&pDue, "due", "d", "", "ISO date")
+	flags.StringVarP(&pEstimate, "estimate", "e", "", "Estimate")
+	flags.StringVarP(&pBaseUpdatedAt, "base_updated_at", "b", "", "Optimistic-concurrency token")
 	return cmd
 }
 
@@ -2576,6 +3004,18 @@ func cmdWorkspaceRoleDelete(getClient func() (*client.Client, error)) *cobra.Com
 		Use:   "roleDelete",
 		Short: "Role delete",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("id") {
+				pID = args[0]
+			}
+			if len(args) > 1 && !cmd.Flags().Changed("role_id") {
+				pRoleID = args[1]
+			}
+			if !cmd.Flags().Changed("id") && pID == "" {
+				return fmt.Errorf("required flag --id (or positional argument) is missing")
+			}
+			if !cmd.Flags().Changed("role_id") && pRoleID == "" {
+				return fmt.Errorf("required flag --role_id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -2591,10 +3031,8 @@ func cmdWorkspaceRoleDelete(getClient func() (*client.Client, error)) *cobra.Com
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pID, "id", "", "Workspace id")
-	_ = cmd.MarkFlagRequired("id")
-	flags.StringVar(&pRoleID, "role_id", "", "Role id")
-	_ = cmd.MarkFlagRequired("role_id")
+	flags.StringVarP(&pID, "id", "i", "", "Workspace id")
+	flags.StringVarP(&pRoleID, "role_id", "r", "", "Role id")
 	return cmd
 }
 
@@ -2611,20 +3049,32 @@ func cmdWorkspaceRoleUpsert(getClient func() (*client.Client, error)) *cobra.Com
 		Use:   "roleUpsert",
 		Short: "Role upsert",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("id") {
+				pID = args[0]
+			}
+			if len(args) > 1 && !cmd.Flags().Changed("role_id") {
+				pRoleID = args[1]
+			}
+			if !cmd.Flags().Changed("id") && pID == "" {
+				return fmt.Errorf("required flag --id (or positional argument) is missing")
+			}
+			if !cmd.Flags().Changed("name") && pName == "" {
+				return fmt.Errorf("required flag --name (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
 			}
 			var req client.WorkspaceRoleUpsertParams
 			req.ID = pID
-			if cmd.Flags().Changed("role_id") {
+			if cmd.Flags().Changed("role_id") || pRoleID != "" {
 				req.RoleID = &pRoleID
 			}
-			if cmd.Flags().Changed("scope") {
+			if cmd.Flags().Changed("scope") || pScope != "" {
 				req.Scope = &pScope
 			}
 			req.Name = pName
-			if cmd.Flags().Changed("default") {
+			if cmd.Flags().Changed("default") || pDefault != "" {
 				req.Default = &pDefault
 			}
 			if err := json.Unmarshal([]byte(pCaps), &req.Caps); err != nil {
@@ -2641,15 +3091,13 @@ func cmdWorkspaceRoleUpsert(getClient func() (*client.Client, error)) *cobra.Com
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pID, "id", "", "Workspace id")
-	_ = cmd.MarkFlagRequired("id")
-	flags.StringVar(&pRoleID, "role_id", "", "empty to create")
-	flags.StringVar(&pScope, "scope", "", "owner or workspace (create only)")
-	flags.StringVar(&pName, "name", "", "Role name")
-	_ = cmd.MarkFlagRequired("name")
-	flags.StringVar(&pDefault, "default", "", "off|read|write")
-	flags.StringVar(&pCaps, "caps", "", "feature to read|write; JSON")
-	flags.BoolVar(&pManage, "manage", false, "Can manage the workspace")
+	flags.StringVarP(&pID, "id", "i", "", "Workspace id")
+	flags.StringVarP(&pRoleID, "role_id", "r", "", "empty to create")
+	flags.StringVarP(&pScope, "scope", "s", "", "owner or workspace (create only)")
+	flags.StringVarP(&pName, "name", "n", "", "Role name")
+	flags.StringVarP(&pDefault, "default", "d", "", "off|read|write")
+	flags.StringVarP(&pCaps, "caps", "c", "", "feature to read|write; JSON")
+	flags.BoolVarP(&pManage, "manage", "m", false, "Can manage the workspace")
 	return cmd
 }
 
@@ -2660,6 +3108,12 @@ func cmdWorkspaceRoles(getClient func() (*client.Client, error)) *cobra.Command 
 		Use:   "roles",
 		Short: "Roles",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && !cmd.Flags().Changed("id") {
+				pID = args[0]
+			}
+			if !cmd.Flags().Changed("id") && pID == "" {
+				return fmt.Errorf("required flag --id (or positional argument) is missing")
+			}
 			c, err := getClient()
 			if err != nil {
 				return err
@@ -2674,7 +3128,6 @@ func cmdWorkspaceRoles(getClient func() (*client.Client, error)) *cobra.Command 
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVar(&pID, "id", "", "Workspace id")
-	_ = cmd.MarkFlagRequired("id")
+	flags.StringVarP(&pID, "id", "i", "", "Workspace id")
 	return cmd
 }
