@@ -12,6 +12,29 @@ default the generated surface is **pruned to what RPC API keys can call** (see
 [Key-available surface](#key-available-surface)); `-full` restores everything
 the spec publishes.
 
+## Installation
+
+Prebuilt binaries for linux/darwin/windows (amd64 + arm64) are published on the
+[Releases page](https://github.com/dakolli/mininote-cli/releases). Quick install
+via the script (linux/macOS):
+
+```sh
+curl -sfL https://raw.githubusercontent.com/dakolli/mininote-cli/main/install.sh | sh
+```
+
+Or install from source with Go:
+
+```sh
+go install github.com/dakolli/mininote-cli@latest
+```
+
+Or grab a prebuilt binary directly from
+[GitHub Releases](https://github.com/dakolli/mininote-cli/releases).
+
+`install.sh`, the releases, and `go install` all target the public mirror repo
+`github.com/dakolli/mininote-cli`. Local development stays in the
+`workspace_mininote` workspace (see [Develop](#develop) below).
+
 ## Prerequisites
 
 - Go 1.26+

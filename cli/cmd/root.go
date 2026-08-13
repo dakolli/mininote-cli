@@ -149,7 +149,7 @@ var versionCmd = &cobra.Command{
 	Short: "Print the mininote CLI version",
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Fprintln(cmd.OutOrStdout(), "mininote-cli dev")
+		fmt.Fprintln(cmd.OutOrStdout(), "mininote-cli "+version)
 		return nil
 	},
 }

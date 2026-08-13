@@ -1,0 +1,15 @@
+# Mirror repo .gitignore — staged under mininote-gen/publish/ and copied to the
+# root of github.com/dakolli/mininote-cli by the publish script.
+#
+# Deliberately MINIMAL: *.gen.go is NOT ignored here — generated code ships in
+# the mirror (it is required to build from source), and the go.work is not
+# present. Only OS cruft, local secrets, and GoReleaser build output.
+
+# OS cruft
+.DS_Store
+
+# Local secrets (never committed; the publish script never stages them either)
+.env
+
+# GoReleaser build output
+dist/

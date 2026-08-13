@@ -1,0 +1,46 @@
+# Release workflow for the mirror repo (github.com/dakolli/mininote-cli).
+# This file is staged under mininote-gen/publish/ and copied verbatim to
+# .github/workflows/release.yml in the mirror root by the publish script.
+# All paths below are relative to the MIRROR ROOT, where the module lives at
+# the repo root (go.mod, gen/, cmd/, client/ all at ".").
+#
+# Fires on v* tags; GoReleaser builds the linux/darwin/windows x amd64/arm64
+# matrix from .goreleaser.yaml and publishes the release + checksums to GitHub.
+# Only the default GITHUB_TOKEN is used — no extra secrets.
+
+name: Release
+
+# "on" is quoted so strict YAML 1.1 parsers (e.g. PyYAML/yamllint) don't read
+# it as the boolean true; GitHub's parser treats both forms identically.
+"on":
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  goreleaser:
+    name: GoReleaser release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      # version: latest resolves the newest GoReleaser v2, matching the v2
+      # schema in .goreleaser.yaml.
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

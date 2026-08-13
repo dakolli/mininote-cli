@@ -1,0 +1,48 @@
+# .goreleaser.yaml — release pipeline for the mininote CLI.
+#
+# This file lives under mininote-gen/publish/ and is copied verbatim to the
+# ROOT of the mirror repo (github.com/dakolli/mininote-cli) by the publish
+# script. In the mirror the Go module sits at the repo root, so go.mod, gen/,
+# cmd/, client/ are all at "." here.
+#
+# GoReleaser v2 schema (goreleaser-action@v6 in .github/workflows/release.yml
+# resolves the latest v2 release).
+version: 2
+
+project_name: mininote
+
+builds:
+  - id: mininote
+    main: ./cmd/mininote
+    binary: mininote
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -s -w -X github.com/dakolli/mininote-cli/cmd.version={{.Version}}
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - id: mininote
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    name_template: "mininote_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    # Ship the docs in every archive; the installer extracts only the binary.
+    files:
+      - README.md
+      - LICENSE
+
+checksum:
+  name_template: "checksums.txt"
+
+release:
+  github:
+    owner: dakolli
+    name: mininote-cli
