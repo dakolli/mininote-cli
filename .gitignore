@@ -7,8 +7,8 @@
 # GoReleaser build output
 dist/
 
-# Locally built binary
-mininote
+# Locally built binary (root only, do not ignore cmd/mininote/)
+/mininote
 
 # Internal dev docs & generator inputs (never published)
 AGENTS.md
