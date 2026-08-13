@@ -61,6 +61,21 @@ go install ./cmd/mininote  # installs `mininote` to $GOPATH/bin
 Or without installing: `go run ./cmd/mininote --help`. (All commands below
 assume you're inside `cli/`.)
 
+## Develop
+
+Build and regenerate from the source repo (`mininote-gen/`) on your machine:
+
+```sh
+cd mininote-gen/cli        # local module root inside the workspace go.work
+go generate ./...          # live-captures the spec and rebuilds the .gen.go files
+go build ./cmd/mininote    # or: go install ./cmd/mininote
+```
+
+For deterministic, network-free regeneration (CI-friendly) use the offline
+mode instead: `go run ./gen -offline` + `go run ./cmd/cmdgen -offline` — no
+live capture, no `STALE SPEC` warning. The published mirror is assembled from
+this repo by `scripts/publish.sh`; see its header for the whitelist.
+
 ## Quick start
 
 ```sh
@@ -114,6 +129,14 @@ Every `go generate` first re-captures the catalog from
 model from that fresh file — the committed snapshot is never consumed stale.
 Passing `-in <file>` to `gen`/`cmdgen` explicitly uses that file instead and
 prints a loud `STALE SPEC` warning (offline builds only).
+
+**Deterministic offline regeneration (CI):** pass `-offline` to skip the live
+capture entirely and regenerate silently from the committed `intro.json` — no
+network, no `STALE SPEC` warning. Use `go run ./gen -offline` +
+`go run ./cmd/cmdgen -offline` in CI so the staleness gate
+(`go generate ./... && git diff --exit-code`) is deterministic; local
+`go generate ./...` keeps live capture. `-in` and `-offline` are mutually
+exclusive.
 
 The generators only emit types and method stubs; the runtime
 (`client/client.go`) is hand-written and handles the `{"args":…}` / `{"data":…}`

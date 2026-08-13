@@ -208,6 +208,10 @@ go test -run TestIntegration -v ./client/   # live; SKIPPED unless MININOTE_RPC_
   why the directives work from anywhere in the module. The spec itself is captured live; the repo-root
   `intro.json` is rewritten every run (auth from `MININOTE_ADMIN_AGENT_KEY`, then `MININOTE_RPC_KEY`,
   then `MININOTE_TOKEN`).
+- **CI / offline regeneration:** use `go run ./gen -offline` + `go run ./cmd/cmdgen -offline` for a
+  deterministic, network-free rebuild from the committed `intro.json` (no `STALE SPEC` warning — that
+  banner is only for explicit `-in`). Local `go generate ./...` stays live-capturing; `-in` and
+  `-offline` are mutually exclusive.
 - The unit tests (`client_test.go`) spin up an `httptest.Server` and assert the exact request body
   (`{"args":{...}}`), the `Bearer` header, envelope decoding, and that the client-side
   session-only block returns 403 without a network call (`TestSessionOnlyBlockedForAPIKey`).

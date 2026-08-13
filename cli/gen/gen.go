@@ -30,6 +30,7 @@ func main() {
 	in := flag.String("in", defaultIn, "path to the intro.json spec file (passing it explicitly skips the live capture and uses the file as-is — the committed spec is a STALE offline fallback)")
 	introspect := flag.String("introspect", spec.DefaultIntrospectURL, "live spec capture URL; the captured spec is written to <repo root>/intro.json on every run")
 	forbidden := flag.String("forbidden", "", "path to api-key-forbidden.txt (default: <repo root>/api-key-forbidden.txt)")
+	offline := flag.Bool("offline", false, "regenerate from the committed intro.json without a live capture (used by CI; no STALE warning — this is intentional)")
 	full := flag.Bool("full", false, "skip forbidden-list pruning and generate the complete surface from the spec")
 	typesOut := flag.String("types", "", fmt.Sprintf("output file for generated types (default: <module root>/client/%s)", outTypes))
 	methodsOut := flag.String("methods", "", fmt.Sprintf("output file for generated methods (default: <module root>/client/%s)", outMethod))
@@ -40,15 +41,21 @@ func main() {
 		log.Fatalf("find module root: %v", err)
 	}
 	if *forbidden == "" {
-		*forbidden = filepath.Join(filepath.Dir(root), forbiddenName)
+		*forbidden = filepath.Join(specDir(root), forbiddenName)
 	}
 
-	// The spec is always re-captured live unless -in was passed explicitly: the
-	// committed intro.json is a stale fallback for offline builds only.
-	if flagSet("in") {
+	// The spec is always re-captured live unless -in or -offline was passed:
+	// the committed intro.json is a stale fallback for offline builds only.
+	switch {
+	case *offline && flagSet("in"):
+		log.Fatalf("-in and -offline are mutually exclusive: pass -offline (committed spec) or -in <file>, not both")
+	case flagSet("in"):
 		spec.StaleSpecWarning(*in)
-	} else {
-		specPath := filepath.Join(filepath.Dir(root), introspectName)
+	case *offline:
+		*in = filepath.Join(specDir(root), introspectName)
+		log.Printf("offline: regenerating from committed spec %s (no live capture)", *in)
+	default:
+		specPath := filepath.Join(specDir(root), introspectName)
 		if _, _, err := spec.CaptureSpec(context.Background(), *introspect, spec.SpecToken(), specPath); err != nil {
 			log.Fatalf("capture spec from %s: %v (set MININOTE_ADMIN_AGENT_KEY or MININOTE_TOKEN)", *introspect, err)
 		}
@@ -116,6 +123,21 @@ func moduleRoot() (string, error) {
 		}
 		dir = parent
 	}
+}
+
+// specDir returns the directory holding the committed spec (intro.json).
+// The source layout nests the module at cli/ with the spec at the repo root
+// (filepath.Dir(root)); the mirror layout flattens both into the module root
+// itself. Probe both candidates and prefer whichever exists, falling back to
+// the source layout when neither is present (live capture will create it).
+func specDir(root string) string {
+	if _, err := os.Stat(filepath.Join(filepath.Dir(root), introspectName)); err == nil {
+		return filepath.Dir(root)
+	}
+	if _, err := os.Stat(filepath.Join(root, introspectName)); err == nil {
+		return root
+	}
+	return filepath.Dir(root)
 }
 
 // flagSet reports whether the named flag was given on the command line.
