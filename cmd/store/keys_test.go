@@ -26,7 +26,7 @@ func TestStore_KeysCRUD(t *testing.T) {
 		Name:      "personal",
 		Workspace: "PLUG",
 		Token:     "mnk_12345",
-		Type:      "rpc",
+		Type:      KeyTypeRPC,
 	}
 
 	if err := st.PutKey(key1); err != nil {
@@ -37,7 +37,7 @@ func TestStore_KeysCRUD(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetKey failed: %v", err)
 	}
-	if got == nil || got.Token != key1.Token || got.Type != "rpc" {
+	if got == nil || got.Token != key1.Token || got.Type != KeyTypeRPC {
 		t.Fatalf("unexpected key retrieved: %+v", got)
 	}
 
@@ -62,6 +62,46 @@ func TestStore_KeysCRUD(t *testing.T) {
 	}
 }
 
+func TestStore_KeyTypesAndCapabilities(t *testing.T) {
+	st := newTestStore(t)
+
+	if err := st.PutKey(KeysRecord{Name: "invalid", Token: "mnk_inv", Type: "bogus"}); err == nil {
+		t.Fatal("expected error for invalid KeyType, got nil")
+	}
+
+	rpcKey := KeysRecord{Name: "rpc_only", Token: "mnk_rpc", Type: KeyTypeRPC}
+	mcpKey := KeysRecord{Name: "mcp_only", Token: "mnk_mcp", Type: KeyTypeMCP}
+	multiKey := KeysRecord{Name: "multi", Token: "mnk_multi", Type: KeyTypeMulti}
+
+	_ = st.PutKey(rpcKey)
+	_ = st.PutKey(mcpKey)
+	_ = st.PutKey(multiKey)
+
+	// Explicit lookup RPC
+	if _, err := st.ResolveKeyFor("rpc_only", KeyTypeRPC); err != nil {
+		t.Fatalf("expected rpc_only to satisfy RPC, got %v", err)
+	}
+	if _, err := st.ResolveKeyFor("rpc_only", KeyTypeMCP); err == nil {
+		t.Fatal("expected rpc_only to fail MCP check, got nil")
+	}
+
+	// Explicit lookup MCP
+	if _, err := st.ResolveKeyFor("mcp_only", KeyTypeMCP); err != nil {
+		t.Fatalf("expected mcp_only to satisfy MCP, got %v", err)
+	}
+	if _, err := st.ResolveKeyFor("mcp_only", KeyTypeRPC); err == nil {
+		t.Fatal("expected mcp_only to fail RPC check, got nil")
+	}
+
+	// Explicit lookup Multi (satisfies both)
+	if _, err := st.ResolveKeyFor("multi", KeyTypeRPC); err != nil {
+		t.Fatalf("expected multi to satisfy RPC, got %v", err)
+	}
+	if _, err := st.ResolveKeyFor("multi", KeyTypeMCP); err != nil {
+		t.Fatalf("expected multi to satisfy MCP, got %v", err)
+	}
+}
+
 func TestStore_ResolveKey(t *testing.T) {
 	t.Run("empty store", func(t *testing.T) {
 		st := newTestStore(t)
@@ -73,7 +113,7 @@ func TestStore_ResolveKey(t *testing.T) {
 
 	t.Run("single key fallback", func(t *testing.T) {
 		st := newTestStore(t)
-		_ = st.PutKey(KeysRecord{Name: "solo", Token: "mnk_solo", Type: "rpc"})
+		_ = st.PutKey(KeysRecord{Name: "solo", Token: "mnk_solo", Type: KeyTypeRPC})
 
 		rec, err := st.ResolveKey("")
 		if err != nil {
@@ -86,8 +126,8 @@ func TestStore_ResolveKey(t *testing.T) {
 
 	t.Run("multiple keys with active key", func(t *testing.T) {
 		st := newTestStore(t)
-		_ = st.PutKey(KeysRecord{Name: "k1", Token: "mnk_1", Type: "rpc"})
-		_ = st.PutKey(KeysRecord{Name: "k2", Token: "mnk_2", Type: "rpc"})
+		_ = st.PutKey(KeysRecord{Name: "k1", Token: "mnk_1", Type: KeyTypeRPC})
+		_ = st.PutKey(KeysRecord{Name: "k2", Token: "mnk_2", Type: KeyTypeRPC})
 
 		// without active key
 		_, err := st.ResolveKey("")
@@ -117,7 +157,7 @@ func TestStore_ResolveKey(t *testing.T) {
 
 	t.Run("delete active key clears active", func(t *testing.T) {
 		st := newTestStore(t)
-		_ = st.PutKey(KeysRecord{Name: "k1", Token: "mnk_1", Type: "rpc"})
+		_ = st.PutKey(KeysRecord{Name: "k1", Token: "mnk_1", Type: KeyTypeRPC})
 		_ = st.SetActiveKey("k1")
 
 		_ = st.DeleteKey("k1")

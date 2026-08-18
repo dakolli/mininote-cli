@@ -61,9 +61,14 @@ func getClient() (*client.Client, error) {
 	return client.New(defaultBaseURL, client.WithToken(token))
 }
 
-// resolveToken resolves the token from an explicit flag, environment variables,
-// or the bbolt key store.
+// resolveToken resolves the token for RPC commands from flags, env, or store.
 func resolveToken() (string, error) {
+	return resolveTokenFor(store.KeyTypeRPC)
+}
+
+// resolveTokenFor resolves the token for a specific purpose (RPC or MCP) from
+// an explicit flag, environment variables, or the bbolt key store.
+func resolveTokenFor(purpose store.KeyType) (string, error) {
 	if flagToken != "" {
 		return flagToken, nil
 	}
@@ -80,7 +85,7 @@ func resolveToken() (string, error) {
 	}
 	defer st.Close()
 
-	rec, err := st.ResolveKey(flagKeyName)
+	rec, err := st.ResolveKeyFor(flagKeyName, purpose)
 	if err != nil {
 		return "", err
 	}

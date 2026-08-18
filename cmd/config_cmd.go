@@ -28,8 +28,9 @@ var addTokenCmd = &cobra.Command{
 		if flagAddKeyName == "" {
 			return errors.New("--name is required")
 		}
-		if flagAddKeyType != "rpc" && flagAddKeyType != "mcp" {
-			return fmt.Errorf("invalid type %q (must be 'rpc' or 'mcp')", flagAddKeyType)
+		kt := store.KeyType(flagAddKeyType)
+		if !kt.IsValid() {
+			return fmt.Errorf("invalid type %q (must be 'rpc', 'mcp', or 'multi')", flagAddKeyType)
 		}
 		st, err := store.GetStore("")
 		if err != nil {
@@ -41,7 +42,7 @@ var addTokenCmd = &cobra.Command{
 			Name:      flagAddKeyName,
 			Workspace: flagAddKeyWorkspace,
 			Token:     args[0],
-			Type:      flagAddKeyType,
+			Type:      kt,
 		}
 		if err := st.PutKey(rec); err != nil {
 			return fmt.Errorf("save key: %w", err)
@@ -197,7 +198,7 @@ var showPathCmd = &cobra.Command{
 
 func init() {
 	addTokenCmd.Flags().StringVarP(&flagAddKeyName, "name", "n", "", "key name or alias (required)")
-	addTokenCmd.Flags().StringVarP(&flagAddKeyType, "type", "t", "rpc", "key type: 'rpc' or 'mcp'")
+	addTokenCmd.Flags().StringVar(&flagAddKeyType, "type", "rpc", "key type: 'rpc', 'mcp', or 'multi'")
 	addTokenCmd.Flags().StringVarP(&flagAddKeyWorkspace, "workspace", "w", "", "workspace identifier (optional)")
 
 	configCmd.AddCommand(addTokenCmd)

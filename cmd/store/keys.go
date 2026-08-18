@@ -6,18 +6,53 @@ import (
 	"fmt"
 )
 
+// KeyType represents the scope and capability of an API key.
+type KeyType string
+
+const (
+	KeyTypeRPC   KeyType = "rpc"   // REST/RPC API access only
+	KeyTypeMCP   KeyType = "mcp"   // MCP tool server access only
+	KeyTypeMulti KeyType = "multi" // Valid for both RPC and MCP access
+)
+
+// IsValid reports whether kt is a recognized KeyType.
+func (kt KeyType) IsValid() bool {
+	switch kt {
+	case KeyTypeRPC, KeyTypeMCP, KeyTypeMulti:
+		return true
+	default:
+		return false
+	}
+}
+
+// AllowsRPC reports whether the key type can be used for RPC calls.
+func (kt KeyType) AllowsRPC() bool {
+	return kt == KeyTypeRPC || kt == KeyTypeMulti || kt == ""
+}
+
+// AllowsMCP reports whether the key type can be used for MCP server connections.
+func (kt KeyType) AllowsMCP() bool {
+	return kt == KeyTypeMCP || kt == KeyTypeMulti
+}
+
 // KeysRecord stores metadata and credentials for an API or MCP key.
 type KeysRecord struct {
-	Name      string `json:"name"`
-	Workspace string `json:"workspace,omitempty"`
-	Token     string `json:"token"`
-	Type      string `json:"type"`
+	Name      string  `json:"name"`
+	Workspace string  `json:"workspace,omitempty"`
+	Token     string  `json:"token"`
+	Type      KeyType `json:"type"`
 }
 
 // PutKey persists a KeysRecord in the keys bucket, keyed by Name.
 func (s *Store) PutKey(k KeysRecord) error {
 	if k.Name == "" {
 		return errors.New("key name is required")
+	}
+	if k.Type == "" {
+		k.Type = KeyTypeRPC
+	}
+	if !k.Type.IsValid() {
+		return fmt.Errorf("invalid key type %q (must be %q, %q, or %q)", k.Type, KeyTypeRPC, KeyTypeMCP, KeyTypeMulti)
 	}
 	data, err := json.Marshal(k)
 	if err != nil {
@@ -69,10 +104,13 @@ func (s *Store) Keys() ([]KeysRecord, error) {
 	return records, nil
 }
 
-// ResolveKey resolves a key record from the store. If explicitKeyName is provided,
-// it is looked up directly. Otherwise, it resolves the active key, falls back to
-// the single available key if only one exists, or returns a clear error.
+// ResolveKey resolves a key record from the store for RPC usage.
 func (s *Store) ResolveKey(explicitKeyName string) (*KeysRecord, error) {
+	return s.ResolveKeyFor(explicitKeyName, KeyTypeRPC)
+}
+
+// ResolveKeyFor resolves a key record from the store with a specific purpose (RPC or MCP).
+func (s *Store) ResolveKeyFor(explicitKeyName string, purpose KeyType) (*KeysRecord, error) {
 	if explicitKeyName != "" {
 		rec, err := s.GetKey(explicitKeyName)
 		if err != nil {
@@ -80,6 +118,12 @@ func (s *Store) ResolveKey(explicitKeyName string) (*KeysRecord, error) {
 		}
 		if rec == nil {
 			return nil, fmt.Errorf("key %q not found in store; run 'mininote config list-tokens' to view available keys", explicitKeyName)
+		}
+		if purpose == KeyTypeMCP && !rec.Type.AllowsMCP() {
+			return nil, fmt.Errorf("key %q is configured with type %q, but MCP requires type %q or %q", rec.Name, rec.Type, KeyTypeMCP, KeyTypeMulti)
+		}
+		if purpose == KeyTypeRPC && !rec.Type.AllowsRPC() {
+			return nil, fmt.Errorf("key %q is configured with type %q, but RPC calls require type %q or %q", rec.Name, rec.Type, KeyTypeRPC, KeyTypeMulti)
 		}
 		return rec, nil
 	}
@@ -91,19 +135,43 @@ func (s *Store) ResolveKey(explicitKeyName string) (*KeysRecord, error) {
 			return nil, err
 		}
 		if rec != nil {
-			return rec, nil
+			if purpose == KeyTypeMCP && rec.Type.AllowsMCP() {
+				return rec, nil
+			}
+			if purpose == KeyTypeRPC && rec.Type.AllowsRPC() {
+				return rec, nil
+			}
 		}
 	}
 
-	keys, err := s.Keys()
+	allKeys, err := s.Keys()
 	if err != nil {
 		return nil, err
 	}
-	if len(keys) == 0 {
+	if len(allKeys) == 0 {
+		if purpose == KeyTypeMCP {
+			return nil, errors.New("no MCP key found; please add an MCP key:\n  mininote config add-token <token> --name <name> --type mcp")
+		}
 		return nil, errors.New("no API key found; please add a key to use the CLI:\n  mininote config add-token <token> --name <name>")
 	}
-	if len(keys) == 1 {
-		return &keys[0], nil
+
+	var candidates []KeysRecord
+	for _, k := range allKeys {
+		if purpose == KeyTypeMCP && k.Type.AllowsMCP() {
+			candidates = append(candidates, k)
+		} else if purpose == KeyTypeRPC && k.Type.AllowsRPC() {
+			candidates = append(candidates, k)
+		}
 	}
-	return nil, errors.New("multiple keys found but no active key set; use 'mininote config use <name>' or pass '--key <name>'")
+
+	if len(candidates) == 0 {
+		if purpose == KeyTypeMCP {
+			return nil, fmt.Errorf("no keys supporting MCP found (%d keys in vault are RPC-only); add an MCP key with '--type mcp' or '--type multi'", len(allKeys))
+		}
+		return nil, fmt.Errorf("no keys supporting RPC found (%d keys in vault are MCP-only); add an RPC key with '--type rpc' or '--type multi'", len(allKeys))
+	}
+	if len(candidates) == 1 {
+		return &candidates[0], nil
+	}
+	return nil, fmt.Errorf("multiple %s-compatible keys found but no active key set; use 'mininote config use <name>' or pass '--key <name>'", purpose)
 }
