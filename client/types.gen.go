@@ -36,26 +36,6 @@ type AcceptInviteLinkResult struct {
 	WorkspaceName *string `json:"workspace_name,omitempty"`
 }
 
-type ActivityFavoriteParams struct {
-	// Page id
-	PageID string `json:"page_id"`
-}
-
-type ActivityReorderFavoritesParams struct {
-	// Ordered page ids
-	Ids []string `json:"ids"`
-}
-
-type ActivityUnfavoriteParams struct {
-	// Page id
-	PageID string `json:"page_id"`
-}
-
-type ActivityViewParams struct {
-	// Page id
-	PageID string `json:"page_id"`
-}
-
 type Annotation struct {
 	ID           *string `json:"id,omitempty"`
 	SpaceID      *string `json:"space_id,omitempty"`
@@ -76,9 +56,9 @@ type Annotation struct {
 }
 
 type AnnotationAddParams struct {
-	// Node id
+	// Id of the node the annotation anchors to
 	NodeID string `json:"node_id"`
-	// Body
+	// Annotation text (markdown)
 	Body string `json:"body"`
 	// text quote-selector (default) or block media element
 	AnchorType *string `json:"anchor_type,omitempty"`
@@ -104,7 +84,7 @@ type AnnotationChangesParams struct {
 }
 
 type AnnotationDeleteParams struct {
-	// Annotation id
+	// Id of the annotation to delete
 	ID string `json:"id"`
 	// Present when deleting via a share (visitor path)
 	Token *string `json:"token,omitempty"`
@@ -116,9 +96,9 @@ type AnnotationDeleted struct {
 }
 
 type AnnotationEditParams struct {
-	// Annotation id
+	// Id of the annotation to edit
 	ID string `json:"id"`
-	// Body
+	// Replacement annotation body (markdown)
 	Body string `json:"body"`
 	// Present when editing via a share (visitor path)
 	Token *string `json:"token,omitempty"`
@@ -131,21 +111,21 @@ type AnnotationFeed struct {
 }
 
 type AnnotationGetParams struct {
-	// Annotation id
+	// Id of the annotation to fetch
 	ID string `json:"id"`
 	// Present when reading via a share (visitor path)
 	Token *string `json:"token,omitempty"`
 }
 
 type AnnotationListParams struct {
-	// Node id
+	// Node whose annotations to list
 	NodeID string `json:"node_id"`
 	// Present when listing via a share (visitor path)
 	Token *string `json:"token,omitempty"`
 }
 
 type AnnotationSetResolvedParams struct {
-	// Annotation id
+	// Id of the annotation to resolve or reopen
 	ID string `json:"id"`
 	// true to resolve; false to reopen
 	Resolved *bool `json:"resolved,omitempty"`
@@ -175,21 +155,44 @@ type AnnotationView struct {
 	UpdatedAt    *string `json:"updated_at,omitempty"`
 }
 
+type AuditEvent struct {
+	ID        *string        `json:"id,omitempty"`
+	Actor     *string        `json:"actor,omitempty"`
+	Action    *string        `json:"action,omitempty"`
+	Target    *string        `json:"target,omitempty"`
+	Meta      map[string]any `json:"meta,omitempty"`
+	CreatedAt *string        `json:"created_at,omitempty"`
+	Space     *string        `json:"space,omitempty"`
+}
+
+type AuditExportFile struct {
+	Filename *string `json:"filename,omitempty"`
+	Mime     *string `json:"mime,omitempty"`
+	Content  *string `json:"content,omitempty"`
+}
+
 type BaseModel struct {
 }
 
+type BoardLayout struct {
+	Order   []string       `json:"order,omitempty"`
+	Columns map[string]any `json:"columns,omitempty"`
+	Wip     *float64       `json:"wip,omitempty"`
+	View    *string        `json:"view,omitempty"`
+}
+
 type CalFeedCreateParams struct {
-	// Node id
+	// Calendar node the subscribe feed is for
 	NodeID string `json:"node_id"`
 }
 
 type CalFeedRevokeParams struct {
-	// Node id
+	// Calendar node the subscribe feed is for
 	NodeID string `json:"node_id"`
 }
 
 type CalFeedStatusParams struct {
-	// Node id
+	// Calendar node the subscribe feed is for
 	NodeID string `json:"node_id"`
 }
 
@@ -197,6 +200,13 @@ type ChangesResult struct {
 	Pages      []Page   `json:"pages,omitempty"`
 	Tombstones []string `json:"tombstones,omitempty"`
 	Cursor     *string  `json:"cursor,omitempty"`
+}
+
+type ChildrenResult struct {
+	Nodes     []SharedNode `json:"nodes,omitempty"`
+	Cursor    *string      `json:"cursor,omitempty"`
+	More      *bool        `json:"more,omitempty"`
+	Remaining *float64     `json:"remaining,omitempty"`
 }
 
 type Comment struct {
@@ -212,16 +222,16 @@ type Comment struct {
 }
 
 type CommentAddParams struct {
-	// Node id
+	// Id of the node to comment on
 	NodeID string `json:"node_id"`
-	// Body
+	// Comment text (markdown)
 	Body string `json:"body"`
 	// For a threaded reply
 	ParentID *string `json:"parent_id,omitempty"`
 }
 
 type CommentDeleteParams struct {
-	// Comment id
+	// Id of the comment to delete
 	ID string `json:"id"`
 }
 
@@ -231,14 +241,14 @@ type CommentDeleted struct {
 }
 
 type CommentEditParams struct {
-	// Comment id
+	// Id of the comment to edit
 	ID string `json:"id"`
-	// Body
+	// Replacement comment body (markdown)
 	Body string `json:"body"`
 }
 
 type CommentListParams struct {
-	// Node id
+	// Node whose comments to list
 	NodeID string `json:"node_id"`
 }
 
@@ -257,6 +267,13 @@ type CommentView struct {
 	UpdatedAt *string `json:"updated_at,omitempty"`
 }
 
+type ConfigRevision struct {
+	ID        *string        `json:"id,omitempty"`
+	Config    map[string]any `json:"config,omitempty"`
+	Actor     *string        `json:"actor,omitempty"`
+	CreatedAt *string        `json:"created_at,omitempty"`
+}
+
 type CreateAPIKeyResult struct {
 	ID  *string `json:"id,omitempty"`
 	Key *string `json:"key,omitempty"`
@@ -265,16 +282,6 @@ type CreateAPIKeyResult struct {
 type CreateKeyResult struct {
 	ID  *string `json:"id,omitempty"`
 	Key *string `json:"key,omitempty"`
-}
-
-type DashboardSaveParams struct {
-	// Dashboard config
-	Config map[string]any `json:"config"`
-}
-
-type DashboardSetLockedParams struct {
-	// true freezes the home (edit hidden); false reopens it
-	Locked *bool `json:"locked,omitempty"`
 }
 
 type DashboardSnapshot struct {
@@ -310,7 +317,7 @@ type EventDeleteAck struct {
 }
 
 type EventDeleteParams struct {
-	// Node id
+	// Id of the event page whose metadata to drop
 	NodeID string `json:"node_id"`
 }
 
@@ -321,42 +328,42 @@ type EventFeed struct {
 }
 
 type EventGetParams struct {
-	// Node id
+	// Id of the event page
 	NodeID string `json:"node_id"`
 }
 
 type EventHistoryParams struct {
-	// Node id
+	// Id of the event page
 	NodeID string `json:"node_id"`
 }
 
 type EventPatchParams struct {
-	// Node id
+	// Id of the event page to patch
 	NodeID string `json:"node_id"`
-	// Start
+	// local ISO start; omit to leave untouched
 	StartAt *string `json:"start_at,omitempty"`
-	// End
+	// local ISO end; omit to leave untouched
 	EndAt *string `json:"end_at,omitempty"`
-	// All day
+	// whole-day flag; omit to leave untouched
 	AllDay *bool `json:"all_day,omitempty"`
-	// Timezone
+	// IANA zone; omit to leave untouched
 	Tz *string `json:"tz,omitempty"`
-	// Recurrence
+	// RFC-5545 RRULE; omit to leave untouched
 	Rrule *string `json:"rrule,omitempty"`
-	// Location
+	// place or address; omit to leave untouched
 	Location *string `json:"location,omitempty"`
-	// Color
+	// pigment token; omit to leave untouched
 	Color *string `json:"color,omitempty"`
-	// Assignee
+	// assigned user subjects; omit to leave untouched
 	Assignee []string `json:"assignee,omitempty"`
-	// Base updated_at
+	// Optimistic-concurrency token
 	BaseUpdatedAt *string `json:"base_updated_at,omitempty"`
 }
 
 type EventRestoreParams struct {
-	// Node id
+	// Id of the event page to restore
 	NodeID string `json:"node_id"`
-	// Revision id
+	// Id of the revision to restore
 	RevID string `json:"rev_id"`
 }
 
@@ -377,19 +384,19 @@ type EventRevision struct {
 }
 
 type EventSetParams struct {
-	// Node id
+	// Id of the event page to write
 	NodeID string `json:"node_id"`
 	// local ISO YYYY-MM-DDTHH:MM (or YYYY-MM-DD all-day)
 	StartAt *string `json:"start_at,omitempty"`
 	// local ISO; empty = same as start
 	EndAt *string `json:"end_at,omitempty"`
-	// All day
+	// whole-day event; ignores the time
 	AllDay *bool `json:"all_day,omitempty"`
 	// IANA zone e.g. America/New_York
 	Tz *string `json:"tz,omitempty"`
 	// RFC-5545 RRULE string
 	Rrule *string `json:"rrule,omitempty"`
-	// Location
+	// free-text place or address
 	Location *string `json:"location,omitempty"`
 	// pigment token (red/blue/...); empty = default
 	Color *string `json:"color,omitempty"`
@@ -400,12 +407,12 @@ type EventSetParams struct {
 }
 
 type ExportPageParams struct {
-	// Page id
+	// Id of the target page
 	PageID string `json:"page_id"`
 }
 
 type ExportPrepareParams struct {
-	// Root id
+	// Page/folder to export as a subtree; empty = whole account
 	RootID *string `json:"root_id,omitempty"`
 }
 
@@ -427,13 +434,14 @@ type FeedState struct {
 }
 
 type Fields struct {
-	Owner    *string  `json:"owner,omitempty"`
-	Type     []string `json:"type,omitempty"`
-	Status   *string  `json:"status,omitempty"`
-	Priority *string  `json:"priority,omitempty"`
-	Assignee []string `json:"assignee,omitempty"`
-	Due      *string  `json:"due,omitempty"`
-	Estimate *string  `json:"estimate,omitempty"`
+	Owner     *string  `json:"owner,omitempty"`
+	Type      []string `json:"type,omitempty"`
+	Component []string `json:"component,omitempty"`
+	Status    *string  `json:"status,omitempty"`
+	Priority  *string  `json:"priority,omitempty"`
+	Assignee  []string `json:"assignee,omitempty"`
+	Due       *string  `json:"due,omitempty"`
+	Estimate  *string  `json:"estimate,omitempty"`
 }
 
 type ForkResult struct {
@@ -461,20 +469,37 @@ type Header struct {
 	Rss        *bool    `json:"rss,omitempty"`
 }
 
+type HeadingHit struct {
+	PageID  *string  `json:"page_id,omitempty"`
+	Title   *string  `json:"title,omitempty"`
+	Heading *string  `json:"heading,omitempty"`
+	Level   *float64 `json:"level,omitempty"`
+}
+
+type HeadingsResult struct {
+	Hits []HeadingHit `json:"hits,omitempty"`
+}
+
+type HistoryItem struct {
+	ID        *string `json:"id,omitempty"`
+	Actor     *string `json:"actor,omitempty"`
+	CreatedAt *string `json:"created_at,omitempty"`
+}
+
 type HistoryListParams struct {
-	// Page id
+	// Page whose revision history to read
 	PageID string `json:"page_id"`
 }
 
 type HistoryRestoreParams struct {
-	// Page id
+	// Page to roll back
 	PageID string `json:"page_id"`
-	// Revision id
+	// Revision to restore the page to (id from History/list)
 	RevID string `json:"rev_id"`
 }
 
 type HistoryRevisionParams struct {
-	// Revision id
+	// Revision to preview in full (id from History/list)
 	RevID string `json:"rev_id"`
 }
 
@@ -510,14 +535,37 @@ type ImportResult struct {
 }
 
 type Info struct {
-	ID        *string      `json:"id,omitempty"`
-	Name      *string      `json:"name,omitempty"`
-	Kind      *string      `json:"kind,omitempty"`
-	Role      *string      `json:"role,omitempty"`
-	Color     *string      `json:"color,omitempty"`
-	Key       *string      `json:"key,omitempty"`
-	CreatedAt *string      `json:"created_at,omitempty"`
-	Grant     *MemberGrant `json:"grant,omitempty"`
+	ID             *string        `json:"id,omitempty"`
+	Name           *string        `json:"name,omitempty"`
+	Kind           *string        `json:"kind,omitempty"`
+	Role           *string        `json:"role,omitempty"`
+	Color          *string        `json:"color,omitempty"`
+	Key            *string        `json:"key,omitempty"`
+	CreatedAt      *string        `json:"created_at,omitempty"`
+	Grant          *MemberGrant   `json:"grant,omitempty"`
+	TicketStatuses []TicketStatus `json:"ticket_statuses,omitempty"`
+}
+
+type InstantiatedPage struct {
+	ID          *string     `json:"id,omitempty"`
+	ParentID    *string     `json:"parent_id,omitempty"`
+	OwnerID     *string     `json:"owner_id,omitempty"`
+	SpaceID     *string     `json:"space_id,omitempty"`
+	Kind        *string     `json:"kind,omitempty"`
+	AliasID     *string     `json:"alias_id,omitempty"`
+	Title       *string     `json:"title,omitempty"`
+	Body        *string     `json:"body,omitempty"`
+	Config      *PageConfig `json:"config,omitempty"`
+	Slug        *string     `json:"slug,omitempty"`
+	PrevSlug    *string     `json:"prev_slug,omitempty"`
+	Num         *float64    `json:"num,omitempty"`
+	Encrypted   *bool       `json:"encrypted,omitempty"`
+	ClientID    *string     `json:"client_id,omitempty"`
+	Position    *float64    `json:"position,omitempty"`
+	CreatedAt   *string     `json:"created_at,omitempty"`
+	UpdatedAt   *string     `json:"updated_at,omitempty"`
+	DeletedAt   *string     `json:"deleted_at,omitempty"`
+	Undeletable *bool       `json:"undeletable,omitempty"`
 }
 
 type InviteLinkPreview struct {
@@ -589,24 +637,6 @@ type ListInviteLinksResult struct {
 	Links []InviteLinkView `json:"links,omitempty"`
 }
 
-type LockAcquireParams struct {
-	// Resource key
-	Resource string `json:"resource"`
-	// Session token
-	Token string `json:"token"`
-	// Display label
-	Label *string `json:"label,omitempty"`
-	// Reclaim only (don't grab if free)
-	Reclaim *bool `json:"reclaim,omitempty"`
-}
-
-type LockReleaseParams struct {
-	// Resource key
-	Resource string `json:"resource"`
-	// Session token
-	Token string `json:"token"`
-}
-
 type LockResult struct {
 	Held             *bool    `json:"held,omitempty"`
 	Holder           *string  `json:"holder,omitempty"`
@@ -617,11 +647,6 @@ type LockStatusInfo struct {
 	Locked           *bool    `json:"locked,omitempty"`
 	Holder           *string  `json:"holder,omitempty"`
 	HeartbeatSeconds *float64 `json:"heartbeat_seconds,omitempty"`
-}
-
-type LockStatusParams struct {
-	// Resource key
-	Resource string `json:"resource"`
 }
 
 type LoginResult struct {
@@ -658,6 +683,7 @@ type MeResult struct {
 	PlatformRole *string      `json:"platform_role,omitempty"`
 	Workspace    *MeWorkspace `json:"workspace,omitempty"`
 	HasPassword  *bool        `json:"has_password,omitempty"`
+	AppDomain    *string      `json:"app_domain,omitempty"`
 }
 
 type MeWorkspace struct {
@@ -756,25 +782,10 @@ type Node struct {
 	Path      *string  `json:"path,omitempty"`
 	Num       *float64 `json:"num,omitempty"`
 	Width     *string  `json:"width,omitempty"`
+	Unlisted  *bool    `json:"unlisted,omitempty"`
 	Position  *float64 `json:"position,omitempty"`
 	CreatedAt *string  `json:"created_at,omitempty"`
 	UpdatedAt *string  `json:"updated_at,omitempty"`
-}
-
-type NodeTag struct {
-	OwnerID *string `json:"owner_id,omitempty"`
-	SpaceID *string `json:"space_id,omitempty"`
-	NodeID  *string `json:"node_id,omitempty"`
-	TagID   *string `json:"tag_id,omitempty"`
-	Op      *string `json:"op,omitempty"`
-}
-
-type NodeTagOrder struct {
-	OwnerID  *string  `json:"owner_id,omitempty"`
-	SpaceID  *string  `json:"space_id,omitempty"`
-	NodeID   *string  `json:"node_id,omitempty"`
-	TagID    *string  `json:"tag_id,omitempty"`
-	Position *float64 `json:"position,omitempty"`
 }
 
 type NotificationListing struct {
@@ -791,18 +802,6 @@ type NotificationView struct {
 	Actor         *string `json:"actor,omitempty"`
 	CreatedAt     *string `json:"created_at,omitempty"`
 	ReadAt        *string `json:"read_at,omitempty"`
-}
-
-type NotificationsListParams struct {
-	// Max rows (default 50)
-	Limit *float64 `json:"limit,omitempty"`
-}
-
-type NotificationsMarkReadParams struct {
-	// Notification ids to mark read
-	Ids []string `json:"ids,omitempty"`
-	// Mark every unread notification read
-	All *bool `json:"all,omitempty"`
 }
 
 type OAuthIdentitiesResult struct {
@@ -862,65 +861,72 @@ type PageChangesParams struct {
 }
 
 type PageCloneParams struct {
-	// Page id
+	// Subtree root to deep-copy
 	ID string `json:"id"`
 }
 
 type PageConfig struct {
-	Width      *string  `json:"width,omitempty"`
-	Visibility *string  `json:"visibility,omitempty"`
-	Rss        *bool    `json:"rss,omitempty"`
-	Bio        *string  `json:"bio,omitempty"`
-	Avatar     *string  `json:"avatar,omitempty"`
-	Accent     *string  `json:"accent,omitempty"`
-	Link       *string  `json:"link,omitempty"`
-	Font       *string  `json:"font,omitempty"`
-	Sidebar    *string  `json:"sidebar,omitempty"`
-	Banner     *string  `json:"banner,omitempty"`
-	BannerH    *string  `json:"banner_h,omitempty"`
-	BannerPos  *string  `json:"banner_pos,omitempty"`
-	BannerZoom *float64 `json:"banner_zoom,omitempty"`
-	AvatarPos  *string  `json:"avatar_pos,omitempty"`
-	AvatarZoom *float64 `json:"avatar_zoom,omitempty"`
-	Density    *string  `json:"density,omitempty"`
-	HideFooter *bool    `json:"hide_footer,omitempty"`
-	Dashboard  *string  `json:"dashboard,omitempty"`
+	Width       *string      `json:"width,omitempty"`
+	Visibility  *string      `json:"visibility,omitempty"`
+	Unlisted    *bool        `json:"unlisted,omitempty"`
+	Description *string      `json:"description,omitempty"`
+	Image       *string      `json:"image,omitempty"`
+	SeoTitle    *string      `json:"seo_title,omitempty"`
+	Noindex     *bool        `json:"noindex,omitempty"`
+	Canonical   *string      `json:"canonical,omitempty"`
+	Rss         *bool        `json:"rss,omitempty"`
+	Bio         *string      `json:"bio,omitempty"`
+	Avatar      *string      `json:"avatar,omitempty"`
+	Accent      *string      `json:"accent,omitempty"`
+	Link        *string      `json:"link,omitempty"`
+	Font        *string      `json:"font,omitempty"`
+	Sidebar     *string      `json:"sidebar,omitempty"`
+	Banner      *string      `json:"banner,omitempty"`
+	BannerH     *string      `json:"banner_h,omitempty"`
+	BannerPos   *string      `json:"banner_pos,omitempty"`
+	BannerZoom  *float64     `json:"banner_zoom,omitempty"`
+	AvatarPos   *string      `json:"avatar_pos,omitempty"`
+	AvatarZoom  *float64     `json:"avatar_zoom,omitempty"`
+	Density     *string      `json:"density,omitempty"`
+	HideFooter  *bool        `json:"hide_footer,omitempty"`
+	Dashboard   *string      `json:"dashboard,omitempty"`
+	Board       *BoardLayout `json:"board,omitempty"`
 }
 
 type PageCreateParams struct {
 	// Empty for a root page
 	ParentID *string `json:"parent_id,omitempty"`
-	// Title
+	// Page title
 	Title *string `json:"title,omitempty"`
-	// Body
+	// Markdown body
 	Body *string `json:"body,omitempty"`
 	// page or folder
 	Kind *string `json:"kind,omitempty"`
 	// Target id when kind=alias
 	AliasID *string `json:"alias_id,omitempty"`
-	// Position
+	// Order among siblings
 	Position *float64 `json:"position,omitempty"`
 	// Optional offline-minted correlation id
 	ClientID *string `json:"client_id,omitempty"`
 }
 
 type PageDeleteParams struct {
-	// Page id
+	// Page to delete with its subtree
 	ID string `json:"id"`
 }
 
 type PageExportParams struct {
-	// Page id
+	// Page to export as markdown
 	ID string `json:"id"`
 }
 
 type PageGetParams struct {
-	// Page id
+	// Page to fetch; may be a stale client id
 	ID string `json:"id"`
 }
 
 type PageImportParams struct {
-	// Files
+	// Markdown files to ingest
 	Files []ImportFileParam `json:"files"`
 	// replace updates a matched page (history saved); anything else creates a copy
 	Mode *string `json:"mode,omitempty"`
@@ -933,26 +939,14 @@ type PageListPrefixParams struct {
 	Path *string `json:"path,omitempty"`
 }
 
-type PageMoveToWorkspaceParams struct {
-	// The subtree root to move
-	ID string `json:"id"`
-	// Target workspace id
-	TargetWorkspaceID string `json:"target_workspace_id"`
-}
-
 type PagePathOfParams struct {
-	// Page id
+	// Page whose slash path to resolve
 	ID string `json:"id"`
 }
 
 type PageRefsParams struct {
-	// Page ids
+	// Page ids to resolve to title and kind
 	Ids []string `json:"ids"`
-}
-
-type PageResolveKeyParams struct {
-	// Jira-style page id KEY-N
-	Key string `json:"key"`
 }
 
 type PageResolvePathParams struct {
@@ -961,13 +955,13 @@ type PageResolvePathParams struct {
 }
 
 type PageUpdateParams struct {
-	// Page id
+	// Page to update
 	ID string `json:"id"`
-	// Title
+	// New page title
 	Title *string `json:"title,omitempty"`
-	// Body
+	// New markdown body
 	Body *string `json:"body,omitempty"`
-	// Position
+	// New order among siblings
 	Position *float64 `json:"position,omitempty"`
 	// Empty string detaches to root
 	ParentID *string `json:"parent_id,omitempty"`
@@ -988,9 +982,8 @@ type PageUpsertParams struct {
 	Body *string `json:"body,omitempty"`
 }
 
-type PageUsageParams struct {
-	// Workspace id (default current space)
-	ID *string `json:"id,omitempty"`
+type PagesResult struct {
+	Nodes []SharedNode `json:"nodes,omitempty"`
 }
 
 type PathOfResult struct {
@@ -1006,70 +999,33 @@ type PendingInvite struct {
 	InviteeHandle *string `json:"invitee_handle,omitempty"`
 }
 
-type PresenceLeaveParams struct {
-	// Resource key
-	Resource string `json:"resource"`
-	// Session token
-	Token string `json:"token"`
-}
-
-type PresencePingParams struct {
-	// Resource key
-	Resource string `json:"resource"`
-	// Session token
-	Token string `json:"token"`
-	// Display label
-	Label *string `json:"label,omitempty"`
-}
-
-type ProfileGetParams struct {
-	// Handle
-	Handle string `json:"handle"`
-}
-
 type ProfilePageData struct {
 	Body *string `json:"body,omitempty"`
-}
-
-type ProfilePageParams struct {
-	// Handle
-	Handle string `json:"handle"`
-	// Node id
-	ID string `json:"id"`
-}
-
-type ProfileSaveBlocksParams struct {
-	// Config
-	Config map[string]any `json:"config,omitempty"`
-}
-
-type ProfileSearchParams struct {
-	// Handle
-	Handle string `json:"handle"`
-	// Query
-	Q string `json:"q"`
-}
-
-type ProfileSetMetaParams struct {
-	// Bio
-	Bio *string `json:"bio,omitempty"`
-	// Avatar URL
-	Avatar *string `json:"avatar,omitempty"`
-}
-
-type ProfileSetVisibilityParams struct {
-	// Public
-	Public *bool `json:"public,omitempty"`
-}
-
-type ProfileSharesParams struct {
-	// Handle
-	Handle string `json:"handle"`
 }
 
 type ProviderInfo struct {
 	Name  *string `json:"name,omitempty"`
 	Label *string `json:"label,omitempty"`
+}
+
+type PubOp struct {
+	NodeID *string `json:"node_id,omitempty"`
+	TagID  *string `json:"tag_id,omitempty"`
+	Op     *string `json:"op,omitempty"`
+}
+
+type PubOrder struct {
+	NodeID   *string  `json:"node_id,omitempty"`
+	TagID    *string  `json:"tag_id,omitempty"`
+	Position *float64 `json:"position,omitempty"`
+}
+
+type PubTag struct {
+	ID       *string  `json:"id,omitempty"`
+	Name     *string  `json:"name,omitempty"`
+	Color    *string  `json:"color,omitempty"`
+	Category *string  `json:"category,omitempty"`
+	Position *float64 `json:"position,omitempty"`
 }
 
 type QueryResult struct {
@@ -1094,11 +1050,39 @@ type ResolveKeyResult struct {
 	ID *string `json:"id,omitempty"`
 }
 
+type ResolvePathResult struct {
+	Nodes    []SharedNode `json:"nodes,omitempty"`
+	TargetID *string      `json:"target_id,omitempty"`
+	Body     *string      `json:"body,omitempty"`
+	Found    *bool        `json:"found,omitempty"`
+}
+
+type RestoredPage struct {
+	ID          *string     `json:"id,omitempty"`
+	ParentID    *string     `json:"parent_id,omitempty"`
+	OwnerID     *string     `json:"owner_id,omitempty"`
+	SpaceID     *string     `json:"space_id,omitempty"`
+	Kind        *string     `json:"kind,omitempty"`
+	AliasID     *string     `json:"alias_id,omitempty"`
+	Title       *string     `json:"title,omitempty"`
+	Body        *string     `json:"body,omitempty"`
+	Config      *PageConfig `json:"config,omitempty"`
+	Slug        *string     `json:"slug,omitempty"`
+	PrevSlug    *string     `json:"prev_slug,omitempty"`
+	Num         *float64    `json:"num,omitempty"`
+	Encrypted   *bool       `json:"encrypted,omitempty"`
+	ClientID    *string     `json:"client_id,omitempty"`
+	Position    *float64    `json:"position,omitempty"`
+	CreatedAt   *string     `json:"created_at,omitempty"`
+	UpdatedAt   *string     `json:"updated_at,omitempty"`
+	DeletedAt   *string     `json:"deleted_at,omitempty"`
+	Undeletable *bool       `json:"undeletable,omitempty"`
+}
+
 type Result struct {
 	Dash    map[string]any `json:"dash,omitempty"`
 	Space   *SharedSpace   `json:"space,omitempty"`
 	Header  *Header        `json:"header,omitempty"`
-	Tags    *TagState      `json:"tags,omitempty"`
 	Private *bool          `json:"private,omitempty"`
 }
 
@@ -1165,11 +1149,11 @@ type ScopeFolder struct {
 type SearchQueryParams struct {
 	// Full-text search over your pages
 	Query *string `json:"query,omitempty"`
-	// Max results
+	// Max hits to return; defaults to 25 and caps at 100
 	Limit *float64 `json:"limit,omitempty"`
-	// Filter by node kind
+	// Only these node kinds; up to 8
 	Kinds []string `json:"kinds,omitempty"`
-	// Restrict to a folder's subtree
+	// Folder id to search within its subtree
 	ScopeRoot *string `json:"scope_root,omitempty"`
 }
 
@@ -1181,17 +1165,12 @@ type SetNameResult struct {
 	Ok *bool `json:"ok,omitempty"`
 }
 
-type SettingsPutParams struct {
-	// Freeform UI/e-ink state blob
-	Data map[string]any `json:"data"`
-}
-
 type SettingsSnapshot struct {
 	Data map[string]any `json:"data,omitempty"`
 }
 
 type ShareCreateParams struct {
-	// Page id
+	// Page to publish as a public share
 	PageID string `json:"page_id"`
 	// Optional; protects the share on create
 	Password *string `json:"password,omitempty"`
@@ -1204,12 +1183,12 @@ type ShareCreateParams struct {
 }
 
 type ShareForkInfoParams struct {
-	// Fork root page id
+	// Forked page to check upstream drift for
 	RootID string `json:"root_id"`
 }
 
 type ShareForkParams struct {
-	// Share token
+	// Public share token to fork from
 	Token string `json:"token"`
 	// The caller's folder to fork into; empty = root
 	ParentID *string `json:"parent_id,omitempty"`
@@ -1220,7 +1199,7 @@ type ShareForkParams struct {
 }
 
 type ShareGetParams struct {
-	// Share token
+	// Public share token to resolve
 	Token string `json:"token"`
 	// Lease token from Share/unlock (protected shares)
 	Lease *string `json:"lease,omitempty"`
@@ -1238,66 +1217,47 @@ type ShareResult struct {
 }
 
 type ShareRevokeParams struct {
-	// Page id
+	// Shared page to target
 	PageID string `json:"page_id"`
 }
 
 type ShareSetAnnotationsParams struct {
-	// Page id
+	// Shared page to toggle annotations on
 	PageID string `json:"page_id"`
-	// Allow annotations
+	// Let logged-in visitors annotate
 	Allow *bool `json:"allow,omitempty"`
 }
 
-type ShareSetExportParams struct {
-	// Page id
-	PageID string `json:"page_id"`
-	// CSV subset of md/zip/epub visitors may download (empty = none)
-	Formats *string `json:"formats,omitempty"`
-}
-
 type ShareSetForkableParams struct {
-	// Page id
+	// Shared page to toggle forking on
 	PageID string `json:"page_id"`
-	// Allow forking
+	// Permit visitors to fork the share
 	Allow *bool `json:"allow,omitempty"`
 }
 
 type ShareSetPasswordParams struct {
-	// Page id
+	// Shared page to protect or unprotect
 	PageID string `json:"page_id"`
 	// Empty removes protection
 	Password *string `json:"password,omitempty"`
 }
 
 type ShareSetRSSParams struct {
-	// Page id
+	// Shared folder to toggle its RSS feed
 	PageID string `json:"page_id"`
-	// Allow RSS feed
+	// Publish the share RSS feed
 	Allow *bool `json:"allow,omitempty"`
-}
-
-type ShareSetRawParams struct {
-	// Page id
-	PageID string `json:"page_id"`
-	// Allow raw
-	Allow *bool `json:"allow,omitempty"`
-}
-
-type ShareSiteRouteParams struct {
-	// Route
-	Route string `json:"route"`
 }
 
 type ShareStatusParams struct {
-	// Page id
+	// Shared page to target
 	PageID string `json:"page_id"`
 }
 
 type ShareUnlockParams struct {
-	// Share token
+	// Protected share token to unlock
 	Token string `json:"token"`
-	// Password
+	// Password proving access to the share
 	Password string `json:"password"`
 }
 
@@ -1310,30 +1270,34 @@ type SharedListing struct {
 }
 
 type SharedNode struct {
-	ID        *string     `json:"id,omitempty"`
-	ParentID  *string     `json:"parent_id,omitempty"`
-	Kind      *string     `json:"kind,omitempty"`
-	AliasID   *string     `json:"alias_id,omitempty"`
-	Slug      *string     `json:"slug,omitempty"`
-	PrevSlug  *string     `json:"prev_slug,omitempty"`
-	Num       *float64    `json:"num,omitempty"`
-	Title     *string     `json:"title,omitempty"`
-	Body      *string     `json:"body,omitempty"`
-	Excerpt   *string     `json:"excerpt,omitempty"`
-	Config    *PageConfig `json:"config,omitempty"`
-	Tint      *string     `json:"tint,omitempty"`
-	Status    *string     `json:"status,omitempty"`
-	Priority  *string     `json:"priority,omitempty"`
-	Due       *string     `json:"due,omitempty"`
-	StartAt   *string     `json:"start_at,omitempty"`
-	EndAt     *string     `json:"end_at,omitempty"`
-	AllDay    *bool       `json:"all_day,omitempty"`
-	Tz        *string     `json:"tz,omitempty"`
-	Rrule     *string     `json:"rrule,omitempty"`
-	Location  *string     `json:"location,omitempty"`
-	Position  *float64    `json:"position,omitempty"`
-	CreatedAt *string     `json:"created_at,omitempty"`
-	UpdatedAt *string     `json:"updated_at,omitempty"`
+	ID          *string      `json:"id,omitempty"`
+	ParentID    *string      `json:"parent_id,omitempty"`
+	Kind        *string      `json:"kind,omitempty"`
+	AliasID     *string      `json:"alias_id,omitempty"`
+	Slug        *string      `json:"slug,omitempty"`
+	PrevSlug    *string      `json:"prev_slug,omitempty"`
+	Num         *float64     `json:"num,omitempty"`
+	Title       *string      `json:"title,omitempty"`
+	Body        *string      `json:"body,omitempty"`
+	Excerpt     *string      `json:"excerpt,omitempty"`
+	Config      *PageConfig  `json:"config,omitempty"`
+	Tint        *string      `json:"tint,omitempty"`
+	Status      *string      `json:"status,omitempty"`
+	Priority    *string      `json:"priority,omitempty"`
+	Due         *string      `json:"due,omitempty"`
+	StartAt     *string      `json:"start_at,omitempty"`
+	EndAt       *string      `json:"end_at,omitempty"`
+	AllDay      *bool        `json:"all_day,omitempty"`
+	Tz          *string      `json:"tz,omitempty"`
+	Rrule       *string      `json:"rrule,omitempty"`
+	Location    *string      `json:"location,omitempty"`
+	Position    *float64     `json:"position,omitempty"`
+	CreatedAt   *string      `json:"created_at,omitempty"`
+	UpdatedAt   *string      `json:"updated_at,omitempty"`
+	ViewMatches []SharedNode `json:"view_matches,omitempty"`
+	MoreKids    *bool        `json:"more_kids,omitempty"`
+	MoreCount   *float64     `json:"more_count,omitempty"`
+	Path        *string      `json:"path,omitempty"`
 }
 
 type SharedSpace struct {
@@ -1359,33 +1323,6 @@ type SrsDeleteAck struct {
 	Ok     *bool   `json:"ok,omitempty"`
 }
 
-type SrsDeleteParams struct {
-	// Node id
-	NodeID string `json:"node_id"`
-}
-
-type SrsGetParams struct {
-	// Node id
-	NodeID string `json:"node_id"`
-}
-
-type SrsSetParams struct {
-	// Node id
-	NodeID string `json:"node_id"`
-	// ISO date (next review)
-	Due *string `json:"due,omitempty"`
-	// SM-2 ease factor
-	Ease *float64 `json:"ease,omitempty"`
-	// days
-	Interval *float64 `json:"interval,omitempty"`
-	// Reps
-	Reps *float64 `json:"reps,omitempty"`
-	// Lapses
-	Lapses *float64 `json:"lapses,omitempty"`
-	// RFC3339
-	LastReviewed *string `json:"last_reviewed,omitempty"`
-}
-
 type Tag struct {
 	ID       *string  `json:"id,omitempty"`
 	OwnerID  *string  `json:"owner_id,omitempty"`
@@ -1403,14 +1340,14 @@ type TagCatalogResult struct {
 }
 
 type TagClearNodeParams struct {
-	// Node id
+	// Node whose override is removed
 	NodeID *string `json:"node_id,omitempty"`
-	// Tag id
+	// Tag to revert to inherited
 	TagID string `json:"tag_id"`
 }
 
 type TagCreateParams struct {
-	// Tag name
+	// New tag label
 	Name string `json:"name"`
 	// default|red|orange|amber|green|blue|violet
 	Color *string `json:"color,omitempty"`
@@ -1419,26 +1356,26 @@ type TagCreateParams struct {
 }
 
 type TagDeleteParams struct {
-	// Tag id
+	// Tag to delete; drops its cascade ops
 	ID string `json:"id"`
 }
 
 type TagReorderGlobalParams struct {
-	// Tag ids in order
+	// Tag ids in the new global order
 	TagIds []string `json:"tag_ids"`
 }
 
 type TagReorderNodeParams struct {
-	// Node id
+	// Node whose local tag order to set
 	NodeID string `json:"node_id"`
-	// Tag ids in order (empty clears the override)
+	// Tag ids in local order; empty clears the override
 	TagIds []string `json:"tag_ids,omitempty"`
 }
 
 type TagSetNodeParams struct {
 	// Empty for the global level
 	NodeID *string `json:"node_id,omitempty"`
-	// Tag id
+	// Tag to add or remove at the node
 	TagID string `json:"tag_id"`
 	// add or remove
 	Op string `json:"op"`
@@ -1447,24 +1384,24 @@ type TagSetNodeParams struct {
 type TagSetNodeTagsParams struct {
 	// Empty for the global level
 	NodeID *string `json:"node_id,omitempty"`
-	// Tag ids
+	// Tag ids the op applies to at once
 	TagIds []string `json:"tag_ids"`
 	// add or remove
 	Op string `json:"op"`
 }
 
 type TagState struct {
-	Tags   []Tag          `json:"tags,omitempty"`
-	Ops    []NodeTag      `json:"ops,omitempty"`
-	Orders []NodeTagOrder `json:"orders,omitempty"`
+	Tags   []PubTag   `json:"tags,omitempty"`
+	Ops    []PubOp    `json:"ops,omitempty"`
+	Orders []PubOrder `json:"orders,omitempty"`
 }
 
 type TagUpdateParams struct {
-	// Tag id
+	// Tag to rename or recolor
 	ID string `json:"id"`
-	// Tag name
+	// New tag label
 	Name string `json:"name"`
-	// Pigment
+	// New pigment; unknown falls back to default
 	Color *string `json:"color,omitempty"`
 }
 
@@ -1481,16 +1418,16 @@ type Template struct {
 }
 
 type TemplateCreateParams struct {
-	// Template name
+	// New template name
 	Name string `json:"name"`
-	// Body (markdown skeleton)
+	// Markdown skeleton with inline {field|type} tokens
 	Body *string `json:"body,omitempty"`
-	// Meta (JSON: ticket defaults etc.)
+	// JSON meta such as ticket defaults
 	Meta *string `json:"meta,omitempty"`
 }
 
 type TemplateDeleteParams struct {
-	// Template id
+	// Template to delete
 	ID string `json:"id"`
 }
 
@@ -1500,20 +1437,20 @@ type TemplateDeleted struct {
 }
 
 type TemplateGetParams struct {
-	// Template id
+	// Template to fetch
 	ID string `json:"id"`
 }
 
 type TemplateInstantiateParams struct {
-	// Template id
+	// Template to instantiate
 	TemplateID string `json:"template_id"`
-	// Parent folder id (empty = root)
+	// Folder to create the page under; empty = root
 	ParentID *string `json:"parent_id,omitempty"`
 	// page or ticket (default page)
 	Kind *string `json:"kind,omitempty"`
-	// Title
+	// Title for the new page
 	Title *string `json:"title,omitempty"`
-	// Field values by name
+	// Values filling the {field|type} tokens by name
 	Values map[string]any `json:"values,omitempty"`
 }
 
@@ -1521,14 +1458,21 @@ type TemplateList struct {
 	Templates []Template `json:"templates,omitempty"`
 }
 
+type TemplatePreview struct {
+	Name          *string  `json:"name,omitempty"`
+	StructureOnly *bool    `json:"structure_only,omitempty"`
+	NodeCount     *float64 `json:"node_count,omitempty"`
+	Outline       []string `json:"outline,omitempty"`
+}
+
 type TemplateUpdateParams struct {
-	// Template id
+	// Template to edit
 	ID string `json:"id"`
-	// Template name
+	// New template name
 	Name string `json:"name"`
-	// Body (markdown skeleton)
+	// Markdown skeleton with inline {field|type} tokens
 	Body *string `json:"body,omitempty"`
-	// Meta (JSON: ticket defaults etc.)
+	// JSON meta such as ticket defaults
 	Meta *string `json:"meta,omitempty"`
 }
 
@@ -1537,6 +1481,7 @@ type Ticket struct {
 	SpaceID   *string  `json:"space_id,omitempty"`
 	Owner     *string  `json:"owner,omitempty"`
 	Type      []string `json:"type,omitempty"`
+	Component []string `json:"component,omitempty"`
 	Status    *string  `json:"status,omitempty"`
 	Priority  *string  `json:"priority,omitempty"`
 	Assignee  []string `json:"assignee,omitempty"`
@@ -1557,7 +1502,7 @@ type TicketDeleteAck struct {
 }
 
 type TicketDeleteParams struct {
-	// Node id
+	// id of the target ticket page
 	NodeID string `json:"node_id"`
 }
 
@@ -1568,45 +1513,42 @@ type TicketFeed struct {
 }
 
 type TicketGetParams struct {
-	// Node id
+	// id of the target ticket page
 	NodeID string `json:"node_id"`
 }
 
 type TicketHistoryParams struct {
-	// Node id
+	// id of the target ticket page
 	NodeID string `json:"node_id"`
-}
-
-type TicketMyWorkParams struct {
-	// true = every workspace you belong to; default = current only
-	All *bool `json:"all,omitempty"`
 }
 
 type TicketPatchParams struct {
-	// Node id
+	// id of the target ticket page
 	NodeID string `json:"node_id"`
-	// Owner
+	// single responsible user id
 	Owner *string `json:"owner,omitempty"`
-	// Type
+	// tag ids (category type)
 	Type []string `json:"type,omitempty"`
-	// Status
+	// tag ids (category component)
+	Component []string `json:"component,omitempty"`
+	// todo | doing | review | done | cancelled
 	Status *string `json:"status,omitempty"`
-	// Priority
+	// low | med | high
 	Priority *string `json:"priority,omitempty"`
-	// Assignee
+	// user ids (a ticket can have many)
 	Assignee []string `json:"assignee,omitempty"`
-	// Due
+	// ISO date
 	Due *string `json:"due,omitempty"`
-	// Estimate
+	// free-text effort/size estimate
 	Estimate *string `json:"estimate,omitempty"`
-	// Base updated_at
+	// Optimistic-concurrency token
 	BaseUpdatedAt *string `json:"base_updated_at,omitempty"`
 }
 
 type TicketRestoreParams struct {
-	// Node id
+	// id of the target ticket page
 	NodeID string `json:"node_id"`
-	// Revision id
+	// id of the revision to restore
 	RevID string `json:"rev_id"`
 }
 
@@ -1623,6 +1565,7 @@ type TicketRevision struct {
 	OwnerID   *string  `json:"owner_id,omitempty"`
 	Owner     *string  `json:"owner,omitempty"`
 	Type      []string `json:"type,omitempty"`
+	Component []string `json:"component,omitempty"`
 	Status    *string  `json:"status,omitempty"`
 	Priority  *string  `json:"priority,omitempty"`
 	Assignee  []string `json:"assignee,omitempty"`
@@ -1632,13 +1575,15 @@ type TicketRevision struct {
 }
 
 type TicketSetParams struct {
-	// Node id
+	// id of the target ticket page
 	NodeID string `json:"node_id"`
 	// single responsible user id
 	Owner *string `json:"owner,omitempty"`
 	// tag ids (category type)
 	Type []string `json:"type,omitempty"`
-	// todo doing or done
+	// tag ids (category component)
+	Component []string `json:"component,omitempty"`
+	// todo | doing | review | done | cancelled
 	Status *string `json:"status,omitempty"`
 	// low med or high
 	Priority *string `json:"priority,omitempty"`
@@ -1646,10 +1591,33 @@ type TicketSetParams struct {
 	Assignee []string `json:"assignee,omitempty"`
 	// ISO date
 	Due *string `json:"due,omitempty"`
-	// Estimate
+	// free-text effort/size estimate
 	Estimate *string `json:"estimate,omitempty"`
 	// Optimistic-concurrency token
 	BaseUpdatedAt *string `json:"base_updated_at,omitempty"`
+}
+
+type TicketStatus struct {
+	ID    *string `json:"id,omitempty"`
+	Name  *string `json:"name,omitempty"`
+	Color *string `json:"color,omitempty"`
+}
+
+type TicketStatusParam struct {
+	// stable status slug (lowercase)
+	ID string `json:"id"`
+	// display name for the column
+	Name string `json:"name"`
+	// pigment name (red|orange|amber|green|blue|violet); empty = default
+	Color *string `json:"color,omitempty"`
+}
+
+type TocResult struct {
+	Nodes []SharedNode `json:"nodes,omitempty"`
+}
+
+type TopTagsResult struct {
+	Counts map[string]any `json:"counts,omitempty"`
 }
 
 type TreeResult struct {
@@ -1665,25 +1633,6 @@ type UploadDeleteAck struct {
 	Ok *bool `json:"ok,omitempty"`
 }
 
-type UploadDeleteManyParams struct {
-	// Image shas
-	Shas []string `json:"shas"`
-}
-
-type UploadDeleteParams struct {
-	// Image sha
-	Sha string `json:"sha"`
-}
-
-type UploadListParams struct {
-	// Search (name)
-	Q *string `json:"q,omitempty"`
-	// Limit
-	Limit *float64 `json:"limit,omitempty"`
-	// Offset
-	Offset *float64 `json:"offset,omitempty"`
-}
-
 type UploadListing struct {
 	Items []MediaItem `json:"items,omitempty"`
 }
@@ -1691,22 +1640,6 @@ type UploadListing struct {
 type UploadPrepared struct {
 	Ticket *string `json:"ticket,omitempty"`
 	Url    *string `json:"url,omitempty"`
-}
-
-type UploadReportParams struct {
-	// Space id
-	Space string `json:"space"`
-	// Image sha
-	Sha string `json:"sha"`
-	// Reason
-	Reason *string `json:"reason,omitempty"`
-}
-
-type UploadSetNameParams struct {
-	// Image sha
-	Sha string `json:"sha"`
-	// Name
-	Name *string `json:"name,omitempty"`
 }
 
 type UploadStatusInfo struct {
@@ -1728,100 +1661,13 @@ type UsageResult struct {
 	Kinds     []UsageKind `json:"kinds,omitempty"`
 }
 
-type WorkspaceAcceptInviteLinkParams struct {
-	// Link token
-	Token string `json:"token"`
-}
-
-type WorkspaceAcceptInviteParams struct {
-	// Invite id
-	InviteID string `json:"invite_id"`
-}
-
-type WorkspaceCancelInviteParams struct {
-	// Workspace id
-	ID string `json:"id"`
-	// Invite id
-	InviteID string `json:"invite_id"`
-}
-
-type WorkspaceCreateInviteLinkParams struct {
-	// Workspace id
-	ID string `json:"id"`
-	// admin | writer | viewer (default writer)
-	Role *string `json:"role,omitempty"`
-	// 0 = never
-	ExpiresDays *float64 `json:"expires_days,omitempty"`
-	// 0 = unlimited
-	MaxUses *float64 `json:"max_uses,omitempty"`
-}
-
-type WorkspaceCreateKeyParams struct {
-	// Workspace id
-	ID string `json:"id"`
-	// Name
-	Name string `json:"name"`
-	// read or write (default write)
-	Tier *string `json:"tier,omitempty"`
-	// Page id of a folder in the workspace; empty = whole workspace
-	ScopeRoot *string `json:"scope_root,omitempty"`
-	// 0 = never
-	ExpiresInDays *float64 `json:"expires_in_days,omitempty"`
-	// several folder ids; supersedes scope_root
-	ScopeRoots []string `json:"scope_roots,omitempty"`
-	// feature to read|write; empty = full access
-	Capabilities map[string]any `json:"capabilities,omitempty"`
-	// rpc and/or mcp; empty = both
-	Surfaces []string `json:"surfaces,omitempty"`
-}
-
 type WorkspaceCreateParams struct {
-	// Workspace name
+	// Display name for the new space
 	Name string `json:"name"`
-}
-
-type WorkspaceDeclineInviteParams struct {
-	// Invite id
-	InviteID string `json:"invite_id"`
-}
-
-type WorkspaceDeleteParams struct {
-	// Workspace id
-	ID string `json:"id"`
-}
-
-type WorkspaceInviteParams struct {
-	// Workspace id
-	ID string `json:"id"`
-	// Must be an existing user
-	Identity string `json:"identity"`
-	// admin | writer | viewer (default writer)
-	Role *string `json:"role,omitempty"`
-}
-
-type WorkspaceInvitesParams struct {
-	// Workspace id
-	ID string `json:"id"`
-}
-
-type WorkspaceKeysWithAccessParams struct {
-	// Workspace id
-	ID string `json:"id"`
-}
-
-type WorkspaceLeaveParams struct {
-	// Workspace id
-	ID string `json:"id"`
-}
-
-type WorkspaceListInviteLinksParams struct {
-	// Workspace id
-	ID string `json:"id"`
-}
-
-type WorkspaceListKeysParams struct {
-	// Workspace id
-	ID string `json:"id"`
+	// Optional workspace template to scaffold from
+	Template *string `json:"template,omitempty"`
+	// Optional shared-template token to scaffold from
+	TemplateToken *string `json:"template_token,omitempty"`
 }
 
 type WorkspaceListing struct {
@@ -1829,101 +1675,41 @@ type WorkspaceListing struct {
 	Current    *string `json:"current,omitempty"`
 }
 
-type WorkspaceMembersParams struct {
-	// Workspace id
-	ID string `json:"id"`
-}
-
-type WorkspacePreviewInviteLinkParams struct {
-	// Link token
-	Token string `json:"token"`
-}
-
-type WorkspaceRemoveMemberParams struct {
-	// Workspace id
-	ID string `json:"id"`
-	// Member subject
-	Subject string `json:"subject"`
-	// admin | writer | viewer (setRole only)
-	Role *string `json:"role,omitempty"`
-}
-
 type WorkspaceRenameParams struct {
-	// Workspace id
+	// Workspace to rename
 	ID string `json:"id"`
-	// New name
+	// New display name for the space
 	Name string `json:"name"`
-}
-
-type WorkspaceRevokeInviteLinkParams struct {
-	// Workspace id
-	ID string `json:"id"`
-	// Link token
-	Token string `json:"token"`
-}
-
-type WorkspaceRevokeKeyAccessParams struct {
-	// Workspace id
-	ID string `json:"id"`
-	// Key id
-	KeyID string `json:"key_id"`
-}
-
-type WorkspaceRevokeKeyParams struct {
-	// Workspace id
-	ID string `json:"id"`
-	// Key id
-	KeyID string `json:"key_id"`
-}
-
-type WorkspaceRoleDeleteParams struct {
-	// Workspace id
-	ID string `json:"id"`
-	// Role id
-	RoleID string `json:"role_id"`
-}
-
-type WorkspaceRoleUpsertParams struct {
-	// Workspace id
-	ID string `json:"id"`
-	// empty to create
-	RoleID *string `json:"role_id,omitempty"`
-	// owner or workspace (create only)
-	Scope *string `json:"scope,omitempty"`
-	// Role name
-	Name string `json:"name"`
-	// off|read|write
-	Default *string `json:"default,omitempty"`
-	// feature to read|write
-	Caps map[string]any `json:"caps,omitempty"`
-	// Can manage the workspace
-	Manage *bool `json:"manage,omitempty"`
-}
-
-type WorkspaceRolesParams struct {
-	// Workspace id
-	ID string `json:"id"`
 }
 
 type WorkspaceSetColorParams struct {
-	// Workspace id
+	// Workspace to tint
 	ID string `json:"id"`
 	// red|orange|amber|green|blue|violet; empty = default
 	Color *string `json:"color,omitempty"`
 }
 
-type WorkspaceSetKeyParams struct {
-	// Workspace id
-	ID string `json:"id"`
-	// Short uppercase prefix for KEY-N page ids
-	Key string `json:"key"`
+type WorkspaceTemplate struct {
+	ID            *string        `json:"id,omitempty"`
+	Name          *string        `json:"name,omitempty"`
+	Blueprint     map[string]any `json:"blueprint,omitempty"`
+	StructureOnly *bool          `json:"structure_only,omitempty"`
+	ShareToken    *string        `json:"share_token,omitempty"`
+	CreatedAt     *string        `json:"created_at,omitempty"`
+	UpdatedAt     *string        `json:"updated_at,omitempty"`
+	Builtin       *bool          `json:"builtin,omitempty"`
 }
 
-type WorkspaceSetRoleParams struct {
-	// Workspace id
+type WorkspaceTemplateDeleteParams struct {
+	// Template to delete
 	ID string `json:"id"`
-	// Member subject
-	Subject string `json:"subject"`
-	// admin | writer | viewer (setRole only)
-	Role *string `json:"role,omitempty"`
+}
+
+type WorkspaceTemplateSaveParams struct {
+	// Display name for the saved blueprint
+	Name string `json:"name"`
+	// Copy the tree + layout but drop bodies
+	StructureOnly *bool `json:"structure_only,omitempty"`
+	// Snapshot this space instead of the active one
+	Workspace *string `json:"workspace,omitempty"`
 }

@@ -173,8 +173,8 @@ func (c *Client) HistoryList(ctx context.Context, req HistoryListParams) (Revisi
 }
 
 // HistoryRestore calls the History.restore RPC.
-func (c *Client) HistoryRestore(ctx context.Context, req HistoryRestoreParams) (Page, error) {
-	var resp Page
+func (c *Client) HistoryRestore(ctx context.Context, req HistoryRestoreParams) (RestoredPage, error) {
+	var resp RestoredPage
 	err := c.do(ctx, "/rpc/History/restore", req, &resp)
 	return resp, err
 }
@@ -460,8 +460,8 @@ func (c *Client) TagUpdate(ctx context.Context, req TagUpdateParams) (map[string
 }
 
 // TemplateInstantiate calls the Template.instantiate RPC.
-func (c *Client) TemplateInstantiate(ctx context.Context, req TemplateInstantiateParams) (Page, error) {
-	var resp Page
+func (c *Client) TemplateInstantiate(ctx context.Context, req TemplateInstantiateParams) (InstantiatedPage, error) {
+	var resp InstantiatedPage
 	err := c.do(ctx, "/rpc/Template/instantiate", req, &resp)
 	return resp, err
 }
@@ -522,23 +522,23 @@ func (c *Client) WorkspaceForKey(ctx context.Context) (WorkspaceListing, error) 
 	return resp, err
 }
 
-// WorkspaceRoleDelete calls the Workspace.roleDelete RPC.
-func (c *Client) WorkspaceRoleDelete(ctx context.Context, req WorkspaceRoleDeleteParams) (map[string]bool, error) {
+// WorkspaceTemplateDelete calls the WorkspaceTemplate.delete RPC.
+func (c *Client) WorkspaceTemplateDelete(ctx context.Context, req WorkspaceTemplateDeleteParams) (map[string]bool, error) {
 	var resp map[string]bool
-	err := c.do(ctx, "/rpc/Workspace/roleDelete", req, &resp)
+	err := c.do(ctx, "/rpc/WorkspaceTemplate/delete", req, &resp)
 	return resp, err
 }
 
-// WorkspaceRoleUpsert calls the Workspace.roleUpsert RPC.
-func (c *Client) WorkspaceRoleUpsert(ctx context.Context, req WorkspaceRoleUpsertParams) (RoleView, error) {
-	var resp RoleView
-	err := c.do(ctx, "/rpc/Workspace/roleUpsert", req, &resp)
+// WorkspaceTemplateList calls the WorkspaceTemplate.list RPC.
+func (c *Client) WorkspaceTemplateList(ctx context.Context) ([]WorkspaceTemplate, error) {
+	var resp []WorkspaceTemplate
+	err := c.do(ctx, "/rpc/WorkspaceTemplate/list", struct{}{}, &resp)
 	return resp, err
 }
 
-// WorkspaceRoles calls the Workspace.roles RPC.
-func (c *Client) WorkspaceRoles(ctx context.Context, req WorkspaceRolesParams) (RolesResult, error) {
-	var resp RolesResult
-	err := c.do(ctx, "/rpc/Workspace/roles", req, &resp)
+// WorkspaceTemplateSave calls the WorkspaceTemplate.save RPC.
+func (c *Client) WorkspaceTemplateSave(ctx context.Context, req WorkspaceTemplateSaveParams) (WorkspaceTemplate, error) {
+	var resp WorkspaceTemplate
+	err := c.do(ctx, "/rpc/WorkspaceTemplate/save", req, &resp)
 	return resp, err
 }
