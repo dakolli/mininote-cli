@@ -21,8 +21,9 @@ func registerServiceCommands(root *cobra.Command, getClient func() (*client.Clie
 	{{- range .Services }}
 	{
 		service := &cobra.Command{
-			Use:   {{printf "%q" .Use}},
-			Short: {{printf "%q" .Short}},
+			Use:     {{printf "%q" .Use}},
+			GroupID: "services",
+			Short:   {{printf "%q" .Short}},
 		}
 		{{- range .Methods }}
 		service.AddCommand({{.CmdFunc}}(getClient))

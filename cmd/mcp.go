@@ -21,8 +21,9 @@ var (
 )
 
 var mcpCmd = &cobra.Command{
-	Use:   "mcp",
-	Short: "Configure mininote MCP server in AI harnesses (claude, opencode, codex, antigravity)",
+	Use:     "mcp",
+	GroupID: "management",
+	Short:   "Configure mininote MCP server in AI harnesses (claude, opencode, codex, antigravity)",
 	Long: `Configure and register the mininote remote MCP server across supported AI coding harnesses.
 
 Resolves your authentication key from the store, env, or --key/--token flags and registers

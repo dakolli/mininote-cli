@@ -18,8 +18,9 @@ import (
 func registerServiceCommands(root *cobra.Command, getClient func() (*client.Client, error)) {
 	{
 		service := &cobra.Command{
-			Use:   "annotation",
-			Short: "Annotation service",
+			Use:     "annotation",
+			GroupID: "services",
+			Short:   "Annotation service",
 		}
 		service.AddCommand(cmdAnnotationAdd(getClient))
 		service.AddCommand(cmdAnnotationChanges(getClient))
@@ -32,8 +33,9 @@ func registerServiceCommands(root *cobra.Command, getClient func() (*client.Clie
 	}
 	{
 		service := &cobra.Command{
-			Use:   "calFeed",
-			Short: "Cal Feed service",
+			Use:     "calFeed",
+			GroupID: "services",
+			Short:   "Cal Feed service",
 		}
 		service.AddCommand(cmdCalFeedCreate(getClient))
 		service.AddCommand(cmdCalFeedRevoke(getClient))
@@ -42,8 +44,9 @@ func registerServiceCommands(root *cobra.Command, getClient func() (*client.Clie
 	}
 	{
 		service := &cobra.Command{
-			Use:   "comment",
-			Short: "Comment service",
+			Use:     "comment",
+			GroupID: "services",
+			Short:   "Comment service",
 		}
 		service.AddCommand(cmdCommentAdd(getClient))
 		service.AddCommand(cmdCommentDelete(getClient))
@@ -53,8 +56,9 @@ func registerServiceCommands(root *cobra.Command, getClient func() (*client.Clie
 	}
 	{
 		service := &cobra.Command{
-			Use:   "event",
-			Short: "Event service",
+			Use:     "event",
+			GroupID: "services",
+			Short:   "Event service",
 		}
 		service.AddCommand(cmdEventChanges(getClient))
 		service.AddCommand(cmdEventDelete(getClient))
@@ -67,8 +71,9 @@ func registerServiceCommands(root *cobra.Command, getClient func() (*client.Clie
 	}
 	{
 		service := &cobra.Command{
-			Use:   "export",
-			Short: "Export service",
+			Use:     "export",
+			GroupID: "services",
+			Short:   "Export service",
 		}
 		service.AddCommand(cmdExportPage(getClient))
 		service.AddCommand(cmdExportPrepare(getClient))
@@ -76,8 +81,9 @@ func registerServiceCommands(root *cobra.Command, getClient func() (*client.Clie
 	}
 	{
 		service := &cobra.Command{
-			Use:   "history",
-			Short: "History service",
+			Use:     "history",
+			GroupID: "services",
+			Short:   "History service",
 		}
 		service.AddCommand(cmdHistoryList(getClient))
 		service.AddCommand(cmdHistoryRestore(getClient))
@@ -86,8 +92,9 @@ func registerServiceCommands(root *cobra.Command, getClient func() (*client.Clie
 	}
 	{
 		service := &cobra.Command{
-			Use:   "page",
-			Short: "Page service",
+			Use:     "page",
+			GroupID: "services",
+			Short:   "Page service",
 		}
 		service.AddCommand(cmdPageChanges(getClient))
 		service.AddCommand(cmdPageClone(getClient))
@@ -108,16 +115,18 @@ func registerServiceCommands(root *cobra.Command, getClient func() (*client.Clie
 	}
 	{
 		service := &cobra.Command{
-			Use:   "search",
-			Short: "Search service",
+			Use:     "search",
+			GroupID: "services",
+			Short:   "Search service",
 		}
 		service.AddCommand(cmdSearchQuery(getClient))
 		root.AddCommand(service)
 	}
 	{
 		service := &cobra.Command{
-			Use:   "share",
-			Short: "Share service",
+			Use:     "share",
+			GroupID: "services",
+			Short:   "Share service",
 		}
 		service.AddCommand(cmdShareApiDocs(getClient))
 		service.AddCommand(cmdShareCreate(getClient))
@@ -137,8 +146,9 @@ func registerServiceCommands(root *cobra.Command, getClient func() (*client.Clie
 	}
 	{
 		service := &cobra.Command{
-			Use:   "tag",
-			Short: "Tag service",
+			Use:     "tag",
+			GroupID: "services",
+			Short:   "Tag service",
 		}
 		service.AddCommand(cmdTagClearNode(getClient))
 		service.AddCommand(cmdTagCreate(getClient))
@@ -153,16 +163,18 @@ func registerServiceCommands(root *cobra.Command, getClient func() (*client.Clie
 	}
 	{
 		service := &cobra.Command{
-			Use:   "template",
-			Short: "Template service",
+			Use:     "template",
+			GroupID: "services",
+			Short:   "Template service",
 		}
 		service.AddCommand(cmdTemplateInstantiate(getClient))
 		root.AddCommand(service)
 	}
 	{
 		service := &cobra.Command{
-			Use:   "ticket",
-			Short: "Ticket service",
+			Use:     "ticket",
+			GroupID: "services",
+			Short:   "Ticket service",
 		}
 		service.AddCommand(cmdTicketChanges(getClient))
 		service.AddCommand(cmdTicketDelete(getClient))
@@ -175,16 +187,18 @@ func registerServiceCommands(root *cobra.Command, getClient func() (*client.Clie
 	}
 	{
 		service := &cobra.Command{
-			Use:   "workspace",
-			Short: "Workspace service",
+			Use:     "workspace",
+			GroupID: "services",
+			Short:   "Workspace service",
 		}
 		service.AddCommand(cmdWorkspaceForKey(getClient))
 		root.AddCommand(service)
 	}
 	{
 		service := &cobra.Command{
-			Use:   "workspaceTemplate",
-			Short: "Workspace Template service",
+			Use:     "workspaceTemplate",
+			GroupID: "services",
+			Short:   "Workspace Template service",
 		}
 		service.AddCommand(cmdWorkspaceTemplateDelete(getClient))
 		service.AddCommand(cmdWorkspaceTemplateList(getClient))

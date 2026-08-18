@@ -161,7 +161,7 @@ fi
 mkdir -p "$installdir"
 install -m 0755 "$bin" "$installdir/$BIN"
 
-# --- create the config directory so it's ready for `mininote config add-token` ---
+# --- create the config directory so it's ready for `mininote key add` ---
 configdir="${XDG_CONFIG_HOME:-$HOME/.config}/mininote"
 mkdir -p "$configdir"
 
@@ -169,7 +169,7 @@ echo
 echo "Installed mininote ${version} to $installdir/$BIN"
 echo
 echo "To get started, save your API key:"
-echo "  mininote config add-token mnk_... --name primary"
+echo "  mininote key add mnk_... --name primary"
 echo
 echo "Then try:"
 echo "  mininote page tree"

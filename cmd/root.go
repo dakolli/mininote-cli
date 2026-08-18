@@ -37,6 +37,15 @@ var (
 //go:generate go run github.com/dakolli/mininote-cli/cmd/cmdgen -introspect https://mininote.ink/rpc/_introspect -forbidden ../api-key-forbidden.txt
 
 func init() {
+	rootCmd.AddGroup(&cobra.Group{
+		ID:    "services",
+		Title: "RPC Services:",
+	})
+	rootCmd.AddGroup(&cobra.Group{
+		ID:    "management",
+		Title: "Management & Integrations:",
+	})
+
 	pf := rootCmd.PersistentFlags()
 	pf.StringVarP(&flagKeyName, "key", "k", "", "named key to authenticate with from the store")
 	pf.StringVarP(&flagToken, "token", "t", "", "override with an explicit auth token")
@@ -44,7 +53,6 @@ func init() {
 
 	registerServiceCommands(rootCmd, getClient)
 	rootCmd.AddCommand(versionCmd)
-	rootCmd.AddCommand(configCmd)
 }
 
 // getClient resolves the auth token and builds a fresh client for the current

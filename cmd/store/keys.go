@@ -117,7 +117,7 @@ func (s *Store) ResolveKeyFor(explicitKeyName string, purpose KeyType) (*KeysRec
 			return nil, err
 		}
 		if rec == nil {
-			return nil, fmt.Errorf("key %q not found in store; run 'mininote config list-tokens' to view available keys", explicitKeyName)
+			return nil, fmt.Errorf("key %q not found in store; run 'mininote key list' to view available keys", explicitKeyName)
 		}
 		if purpose == KeyTypeMCP && !rec.Type.AllowsMCP() {
 			return nil, fmt.Errorf("key %q is configured with type %q, but MCP requires type %q or %q", rec.Name, rec.Type, KeyTypeMCP, KeyTypeMulti)
@@ -150,9 +150,9 @@ func (s *Store) ResolveKeyFor(explicitKeyName string, purpose KeyType) (*KeysRec
 	}
 	if len(allKeys) == 0 {
 		if purpose == KeyTypeMCP {
-			return nil, errors.New("no MCP key found; please add an MCP key:\n  mininote config add-token <token> --name <name> --type mcp")
+			return nil, errors.New("no MCP key found; please add an MCP key:\n  mininote key add <token> --name <name> --type mcp")
 		}
-		return nil, errors.New("no API key found; please add a key to use the CLI:\n  mininote config add-token <token> --name <name>")
+		return nil, errors.New("no API key found; please add a key to use the CLI:\n  mininote key add <token> --name <name>")
 	}
 
 	var candidates []KeysRecord
@@ -173,5 +173,5 @@ func (s *Store) ResolveKeyFor(explicitKeyName string, purpose KeyType) (*KeysRec
 	if len(candidates) == 1 {
 		return &candidates[0], nil
 	}
-	return nil, fmt.Errorf("multiple %s-compatible keys found but no active key set; use 'mininote config use <name>' or pass '--key <name>'", purpose)
+	return nil, fmt.Errorf("multiple %s-compatible keys found but no active key set; use 'mininote key use <name>' or pass '--key <name>'", purpose)
 }
