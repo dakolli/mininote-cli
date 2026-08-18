@@ -46,3 +46,30 @@ release:
   github:
     owner: dakolli
     name: mininote-cli
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^merge:'
+      - Merge pull request
+      - Merge branch
+  groups:
+    - title: "🚀 Features"
+      regexp: '^.*?(feat|feature)(\([[:word:]]+\))??!?:.+$'
+      order: 0
+    - title: "🐛 Bug Fixes"
+      regexp: '^.*?fix(\([[:word:]]+\))??!?:.+$'
+      order: 1
+    - title: "⚡ Performance Improvements"
+      regexp: '^.*?perf(\([[:word:]]+\))??!?:.+$'
+      order: 2
+    - title: "🧰 Maintenance & Chores"
+      regexp: '^.*?(refactor|chore|ci|build)(\([[:word:]]+\))??!?:.+$'
+      order: 3
+    - title: "📝 Documentation"
+      regexp: '^.*?docs(\([[:word:]]+\))??!?:.+$'
+      order: 4
+    - title: "Other Changes"
+      order: 999
+
