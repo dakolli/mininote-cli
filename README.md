@@ -90,9 +90,14 @@ Manage tags and note taxonomy.
 - `setNodeTags` — assign tags to a note (`mininote tag setNodeTags -n <node_id> -t <tag_ids>`)
 
 ### `workspace`
-Workspace management and roles.
+Workspace management.
 - `forKey` — list accessible workspaces and active workspace info (`mininote workspace forKey`)
-- `roles`, `roleUpsert`, `roleDelete` — manage custom workspace access roles
+
+### `workspaceTemplate`
+Reusable workspace-scoped page templates (saved blueprints).
+- `list` — list workspace templates (`mininote workspaceTemplate list`)
+- `save` — save the current page tree as a reusable blueprint (`mininote workspaceTemplate save <name>`, `--structure_only` to copy tree/layout without bodies)
+- `delete` — delete a workspace template (`mininote workspaceTemplate delete <id>`)
 
 ### `comment`
 Read and write discussion comments on notes.
