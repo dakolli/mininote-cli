@@ -55,19 +55,19 @@ changelog:
       - Merge pull request
       - Merge branch
   groups:
-    - title: "🚀 Features"
+    - title: "Features"
       regexp: '^.*?(feat|feature)(\([[:word:]]+\))??!?:.+$'
       order: 0
-    - title: "🐛 Bug Fixes"
+    - title: "Bug Fixes"
       regexp: '^.*?fix(\([[:word:]]+\))??!?:.+$'
       order: 1
-    - title: "⚡ Performance Improvements"
+    - title: "Performance Improvements"
       regexp: '^.*?perf(\([[:word:]]+\))??!?:.+$'
       order: 2
-    - title: "🧰 Maintenance & Chores"
+    - title: "Maintenance & Chores"
       regexp: '^.*?(refactor|chore|ci|build)(\([[:word:]]+\))??!?:.+$'
       order: 3
-    - title: "📝 Documentation"
+    - title: "Documentation"
       regexp: '^.*?docs(\([[:word:]]+\))??!?:.+$'
       order: 4
     - title: "Other Changes"
