@@ -30,10 +30,19 @@ Prebuilt binaries for Linux, macOS, and Windows are available on [GitHub Release
 Grab a workspace API key (`mnk_...`) with REST/RPC API access enabled from your workspace settings and save it:
 
 ```sh
-mininote config set-token mnk_...
+mininote config add-token mnk_... --name primary
 ```
 
-The key is saved to `~/.config/mininote/cli.yaml` with user-only permissions (`0600`). For temp sessions or to use an alternate key, set `export MININOTE_RPC_KEY="mnk_..."` instead. **Note: Multi-key support (granular key-per-project scoping) is planned for an upcoming release.**
+The key is saved in the local key vault at `~/.config/mininote/mininote.db` with user-only permissions (`0600`). You can store multiple named keys (RPC or MCP) and switch between them:
+
+```sh
+mininote config add-token mnk_... --name work --workspace WORK
+mininote config list-tokens             # list all stored keys
+mininote config use work                # switch active key
+mininote config current                 # view current active key
+```
+
+For temporary sessions or CI, set `export MININOTE_RPC_KEY="mnk_..."` or pass `--token` / `-t` directly. You can also select a specific key per-command using `--key <name>` / `-k <name>`.
 
 ## Quick Start
 
@@ -49,15 +58,16 @@ mininote workspace forKey                         # list workspaces
 
 Output is indented JSON by default. Add `--compact` for single-line JSON.
 
-## Configuration
+## Authentication & Configuration
 
-| Setting | How |
+| Auth Method | How |
 |---|---|
-| Server | `--base-url` (default `https://mininote.ink`), or `MININOTE_BASE_URL` |
-| Auth | `--token` flag, `~/.config/mininote/cli.yaml`, or env `MININOTE_RPC_KEY` / `MININOTE_TOKEN` |
+| Flag Override | `--token` / `-t` flag (raw token) or `--key` / `-k` flag (named key from vault) |
+| Environment | `MININOTE_RPC_KEY` or `MININOTE_TOKEN` |
+| Key Vault | `~/.config/mininote/mininote.db` (managed via `mininote config`) |
 | Output | `--compact` for single-line JSON |
 
-Precedence: Flags > Config file > Environment variables.
+Precedence: `--token` flag > Environment variables > `--key` flag > Active vault key > Single stored key fallback.
 
 ## Commands by Service
 
