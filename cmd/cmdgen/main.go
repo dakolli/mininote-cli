@@ -242,7 +242,11 @@ func buildServices(s *spec.Spec, model *spec.Model) ([]serviceView, int) {
 			RequestType: m.RequestType,
 		}
 
-		usedShorthands := map[string]bool{"h": true} // 'h' is reserved by cobra for help
+		// Reserve the shorthands owned by the root command's persistent flags
+		// ('h' help, 't' --token, 'k' --key; --compact has none) so generated
+		// local flags never collide with them at runtime — cobra panics on
+		// duplicate shorthands when merging persistent flags into subcommands.
+		usedShorthands := map[string]bool{"h": true, "t": true, "k": true}
 		posIndex := 0
 
 		for _, f := range m.Params {

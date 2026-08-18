@@ -283,7 +283,7 @@ func cmdAnnotationAdd(getClient func() (*client.Client, error)) *cobra.Command {
 	flags.StringVarP(&pAnchorRev, "anchor_rev", "e", "", "Page revision id at creation (orphan deep-link)")
 	flags.StringVarP(&pColor, "color", "l", "", "pigment red/orange/amber/green/blue/violet (root note)")
 	flags.StringVarP(&pParentID, "parent_id", "p", "", "For a threaded reply")
-	flags.StringVarP(&pToken, "token", "t", "", "Present when annotating via a share (visitor path)")
+	flags.StringVar(&pToken, "token", "", "Present when annotating via a share (visitor path)")
 	return cmd
 }
 
@@ -352,7 +352,7 @@ func cmdAnnotationDelete(getClient func() (*client.Client, error)) *cobra.Comman
 	}
 	flags := cmd.Flags()
 	flags.StringVarP(&pID, "id", "i", "", "Id of the annotation to delete")
-	flags.StringVarP(&pToken, "token", "t", "", "Present when deleting via a share (visitor path)")
+	flags.StringVarP(&pToken, "token", "o", "", "Present when deleting via a share (visitor path)")
 	return cmd
 }
 
@@ -397,7 +397,7 @@ func cmdAnnotationEdit(getClient func() (*client.Client, error)) *cobra.Command 
 	flags := cmd.Flags()
 	flags.StringVarP(&pID, "id", "i", "", "Id of the annotation to edit")
 	flags.StringVarP(&pBody, "body", "b", "", "Replacement annotation body (markdown)")
-	flags.StringVarP(&pToken, "token", "t", "", "Present when editing via a share (visitor path)")
+	flags.StringVarP(&pToken, "token", "o", "", "Present when editing via a share (visitor path)")
 	return cmd
 }
 
@@ -436,7 +436,7 @@ func cmdAnnotationGet(getClient func() (*client.Client, error)) *cobra.Command {
 	}
 	flags := cmd.Flags()
 	flags.StringVarP(&pID, "id", "i", "", "Id of the annotation to fetch")
-	flags.StringVarP(&pToken, "token", "t", "", "Present when reading via a share (visitor path)")
+	flags.StringVarP(&pToken, "token", "o", "", "Present when reading via a share (visitor path)")
 	return cmd
 }
 
@@ -475,7 +475,7 @@ func cmdAnnotationList(getClient func() (*client.Client, error)) *cobra.Command 
 	}
 	flags := cmd.Flags()
 	flags.StringVarP(&pNodeID, "node_id", "n", "", "Node whose annotations to list")
-	flags.StringVarP(&pToken, "token", "t", "", "Present when listing via a share (visitor path)")
+	flags.StringVarP(&pToken, "token", "o", "", "Present when listing via a share (visitor path)")
 	return cmd
 }
 
@@ -519,7 +519,7 @@ func cmdAnnotationSetResolved(getClient func() (*client.Client, error)) *cobra.C
 	flags := cmd.Flags()
 	flags.StringVarP(&pID, "id", "i", "", "Id of the annotation to resolve or reopen")
 	flags.BoolVarP(&pResolved, "resolved", "r", false, "true to resolve; false to reopen")
-	flags.StringVarP(&pToken, "token", "t", "", "Present when resolving via a share (visitor path)")
+	flags.StringVarP(&pToken, "token", "o", "", "Present when resolving via a share (visitor path)")
 	return cmd
 }
 
@@ -954,7 +954,7 @@ func cmdEventPatch(getClient func() (*client.Client, error)) *cobra.Command {
 	flags.StringVarP(&pStartAt, "start_at", "s", "", "local ISO start; omit to leave untouched")
 	flags.StringVarP(&pEndAt, "end_at", "e", "", "local ISO end; omit to leave untouched")
 	flags.BoolVarP(&pAllDay, "all_day", "a", false, "whole-day flag; omit to leave untouched")
-	flags.StringVarP(&pTz, "tz", "t", "", "IANA zone; omit to leave untouched")
+	flags.StringVarP(&pTz, "tz", "z", "", "IANA zone; omit to leave untouched")
 	flags.StringVarP(&pRrule, "rrule", "r", "", "RFC-5545 RRULE; omit to leave untouched")
 	flags.StringVarP(&pLocation, "location", "l", "", "place or address; omit to leave untouched")
 	flags.StringVarP(&pColor, "color", "c", "", "pigment token; omit to leave untouched")
@@ -1071,7 +1071,7 @@ func cmdEventSet(getClient func() (*client.Client, error)) *cobra.Command {
 	flags.StringVarP(&pStartAt, "start_at", "s", "", "local ISO YYYY-MM-DDTHH:MM (or YYYY-MM-DD all-day)")
 	flags.StringVarP(&pEndAt, "end_at", "e", "", "local ISO; empty = same as start")
 	flags.BoolVarP(&pAllDay, "all_day", "a", false, "whole-day event; ignores the time")
-	flags.StringVarP(&pTz, "tz", "t", "", "IANA zone e.g. America/New_York")
+	flags.StringVarP(&pTz, "tz", "z", "", "IANA zone e.g. America/New_York")
 	flags.StringVarP(&pRrule, "rrule", "r", "", "RFC-5545 RRULE string")
 	flags.StringVarP(&pLocation, "location", "l", "", "free-text place or address")
 	flags.StringVarP(&pColor, "color", "c", "", "pigment token (red/blue/...); empty = default")
@@ -1358,9 +1358,9 @@ func cmdPageCreate(getClient func() (*client.Client, error)) *cobra.Command {
 	}
 	flags := cmd.Flags()
 	flags.StringVarP(&pParentID, "parent_id", "p", "", "Empty for a root page")
-	flags.StringVarP(&pTitle, "title", "t", "", "Page title")
+	flags.StringVarP(&pTitle, "title", "i", "", "Page title")
 	flags.StringVarP(&pBody, "body", "b", "", "Markdown body")
-	flags.StringVarP(&pKind, "kind", "k", "", "page or folder; example: page")
+	flags.StringVarP(&pKind, "kind", "n", "", "page or folder; example: page")
 	flags.StringVarP(&pAliasID, "alias_id", "a", "", "Target id when kind=alias")
 	flags.Float64VarP(&pPosition, "position", "o", 0, "Order among siblings")
 	flags.StringVarP(&pClientID, "client_id", "c", "", "Optional offline-minted correlation id")
@@ -1727,11 +1727,11 @@ func cmdPageUpdate(getClient func() (*client.Client, error)) *cobra.Command {
 	}
 	flags := cmd.Flags()
 	flags.StringVarP(&pID, "id", "i", "", "Page to update")
-	flags.StringVarP(&pTitle, "title", "t", "", "New page title")
+	flags.StringVarP(&pTitle, "title", "l", "", "New page title")
 	flags.StringVarP(&pBody, "body", "b", "", "New markdown body")
 	flags.Float64VarP(&pPosition, "position", "p", 0, "New order among siblings")
 	flags.StringVarP(&pParentID, "parent_id", "a", "", "Empty string detaches to root")
-	flags.StringVarP(&pKind, "kind", "k", "", "page or folder or ticket")
+	flags.StringVarP(&pKind, "kind", "n", "", "page or folder or ticket")
 	flags.StringVarP(&pConfig, "config", "c", "", "Reading width and flags; JSON")
 	flags.StringVarP(&pBaseUpdatedAt, "base_updated_at", "s", "", "Optimistic-concurrency token")
 	return cmd
@@ -1776,7 +1776,7 @@ func cmdPageUpsert(getClient func() (*client.Client, error)) *cobra.Command {
 	}
 	flags := cmd.Flags()
 	flags.StringVarP(&pPath, "path", "p", "", "Slash-separated slug path; intermediates become folders. e.g. docs/api/auth; example: docs/api/auth")
-	flags.StringVarP(&pTitle, "title", "t", "", "Display title for the leaf page (slug stays the stable key)")
+	flags.StringVarP(&pTitle, "title", "i", "", "Display title for the leaf page (slug stays the stable key)")
 	flags.StringVarP(&pBody, "body", "b", "", "Markdown body")
 	return cmd
 }
@@ -1822,7 +1822,7 @@ func cmdSearchQuery(getClient func() (*client.Client, error)) *cobra.Command {
 	flags := cmd.Flags()
 	flags.StringVarP(&pQuery, "query", "q", "", "Full-text search over your pages")
 	flags.Float64VarP(&pLimit, "limit", "l", 0, "Max hits to return; defaults to 25 and caps at 100")
-	flags.StringSliceVarP(&pKinds, "kinds", "k", nil, "Only these node kinds; up to 8")
+	flags.StringSliceVarP(&pKinds, "kinds", "i", nil, "Only these node kinds; up to 8")
 	flags.StringVarP(&pScopeRoot, "scope_root", "s", "", "Folder id to search within its subtree")
 	return cmd
 }
@@ -1943,7 +1943,7 @@ func cmdShareFork(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVarP(&pToken, "token", "t", "", "Public share token to fork from")
+	flags.StringVarP(&pToken, "token", "o", "", "Public share token to fork from")
 	flags.StringVarP(&pParentID, "parent_id", "p", "", "The caller's folder to fork into; empty = root")
 	flags.StringVarP(&pLease, "lease", "l", "", "Required to fork a password-protected share")
 	flags.StringVarP(&pWorkspaceID, "workspace_id", "w", "", "Which workspace to fork into; empty = active")
@@ -2015,7 +2015,7 @@ func cmdShareGet(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVarP(&pToken, "token", "t", "", "Public share token to resolve")
+	flags.StringVarP(&pToken, "token", "o", "", "Public share token to resolve")
 	flags.StringVarP(&pLease, "lease", "l", "", "Lease token from Share/unlock (protected shares)")
 	return cmd
 }
@@ -2304,7 +2304,7 @@ func cmdShareUnlock(getClient func() (*client.Client, error)) *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVarP(&pToken, "token", "t", "", "Protected share token to unlock")
+	flags.StringVarP(&pToken, "token", "o", "", "Protected share token to unlock")
 	flags.StringVarP(&pPassword, "password", "p", "", "Password proving access to the share")
 	return cmd
 }
@@ -2344,7 +2344,7 @@ func cmdTagClearNode(getClient func() (*client.Client, error)) *cobra.Command {
 	}
 	flags := cmd.Flags()
 	flags.StringVarP(&pNodeID, "node_id", "n", "", "Node whose override is removed")
-	flags.StringVarP(&pTagID, "tag_id", "t", "", "Tag to revert to inherited")
+	flags.StringVarP(&pTagID, "tag_id", "a", "", "Tag to revert to inherited")
 	return cmd
 }
 
@@ -2467,7 +2467,7 @@ func cmdTagReorderGlobal(getClient func() (*client.Client, error)) *cobra.Comman
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringSliceVarP(&pTagIds, "tag_ids", "t", nil, "Tag ids in the new global order")
+	flags.StringSliceVarP(&pTagIds, "tag_ids", "a", nil, "Tag ids in the new global order")
 	return cmd
 }
 
@@ -2501,7 +2501,7 @@ func cmdTagReorderNode(getClient func() (*client.Client, error)) *cobra.Command 
 	}
 	flags := cmd.Flags()
 	flags.StringVarP(&pNodeID, "node_id", "n", "", "Node whose local tag order to set")
-	flags.StringSliceVarP(&pTagIds, "tag_ids", "t", nil, "Tag ids in local order; empty clears the override")
+	flags.StringSliceVarP(&pTagIds, "tag_ids", "a", nil, "Tag ids in local order; empty clears the override")
 	return cmd
 }
 
@@ -2545,7 +2545,7 @@ func cmdTagSetNode(getClient func() (*client.Client, error)) *cobra.Command {
 	}
 	flags := cmd.Flags()
 	flags.StringVarP(&pNodeID, "node_id", "n", "", "Empty for the global level")
-	flags.StringVarP(&pTagID, "tag_id", "t", "", "Tag to add or remove at the node")
+	flags.StringVarP(&pTagID, "tag_id", "a", "", "Tag to add or remove at the node")
 	flags.StringVarP(&pOp, "op", "o", "", "add or remove")
 	return cmd
 }
@@ -2590,7 +2590,7 @@ func cmdTagSetNodeTags(getClient func() (*client.Client, error)) *cobra.Command 
 	}
 	flags := cmd.Flags()
 	flags.StringVarP(&pNodeID, "node_id", "n", "", "Empty for the global level")
-	flags.StringSliceVarP(&pTagIds, "tag_ids", "t", nil, "Tag ids the op applies to at once")
+	flags.StringSliceVarP(&pTagIds, "tag_ids", "a", nil, "Tag ids the op applies to at once")
 	flags.StringVarP(&pOp, "op", "o", "", "add or remove")
 	return cmd
 }
@@ -2686,10 +2686,10 @@ func cmdTemplateInstantiate(getClient func() (*client.Client, error)) *cobra.Com
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVarP(&pTemplateID, "template_id", "t", "", "Template to instantiate")
+	flags.StringVarP(&pTemplateID, "template_id", "e", "", "Template to instantiate")
 	flags.StringVarP(&pParentID, "parent_id", "p", "", "Folder to create the page under; empty = root")
-	flags.StringVarP(&pKind, "kind", "k", "", "page or ticket (default page)")
-	flags.StringVarP(&pTitle, "title", "i", "", "Title for the new page")
+	flags.StringVarP(&pKind, "kind", "i", "", "page or ticket (default page)")
+	flags.StringVarP(&pTitle, "title", "l", "", "Title for the new page")
 	flags.StringVarP(&pValues, "values", "v", "", "Values filling the {field|type} tokens by name; JSON")
 	return cmd
 }
@@ -2879,7 +2879,7 @@ func cmdTicketPatch(getClient func() (*client.Client, error)) *cobra.Command {
 	flags := cmd.Flags()
 	flags.StringVarP(&pNodeID, "node_id", "n", "", "id of the target ticket page")
 	flags.StringVarP(&pOwner, "owner", "o", "", "single responsible user id")
-	flags.StringSliceVarP(&pType, "type", "t", nil, "tag ids (category type)")
+	flags.StringSliceVarP(&pType, "type", "y", nil, "tag ids (category type)")
 	flags.StringSliceVarP(&pComponent, "component", "c", nil, "tag ids (category component)")
 	flags.StringVarP(&pStatus, "status", "s", "", "todo | doing | review | done | cancelled")
 	flags.StringVarP(&pPriority, "priority", "p", "", "low | med | high")
@@ -2992,7 +2992,7 @@ func cmdTicketSet(getClient func() (*client.Client, error)) *cobra.Command {
 	flags := cmd.Flags()
 	flags.StringVarP(&pNodeID, "node_id", "n", "", "id of the target ticket page")
 	flags.StringVarP(&pOwner, "owner", "o", "", "single responsible user id")
-	flags.StringSliceVarP(&pType, "type", "t", nil, "tag ids (category type)")
+	flags.StringSliceVarP(&pType, "type", "y", nil, "tag ids (category type)")
 	flags.StringSliceVarP(&pComponent, "component", "c", nil, "tag ids (category component)")
 	flags.StringVarP(&pStatus, "status", "s", "", "todo | doing | review | done | cancelled")
 	flags.StringVarP(&pPriority, "priority", "p", "", "low med or high")
