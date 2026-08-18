@@ -30,17 +30,18 @@ Prebuilt binaries for Linux, macOS, and Windows are available on [GitHub Release
 Grab a workspace API key (`mnk_...`) with REST/RPC or MCP access enabled from your workspace settings and save it:
 
 ```sh
-mininote config add-token mnk_... --name primary --type multi
+mininote key add mnk_... --name primary --type multi
 ```
 
 The key is saved in the local key vault at `~/.config/mininote/mininote.db` with user-only permissions (`0600`). You can store multiple named keys by purpose (`--type rpc`, `--type mcp`, or `--type multi`) and switch between them:
 
 ```sh
-mininote config add-token mnk_... --name work --type rpc --workspace WORK
-mininote config add-token mnk_... --name ai-agent --type mcp
-mininote config list-tokens             # list all stored keys
-mininote config use work                # switch active key
-mininote config current                 # view current active key
+mininote key add mnk_... --name work --type rpc --workspace WORK
+mininote key add mnk_... --name ai-agent --type mcp
+mininote key list                       # list all stored keys (or `mininote key`)
+mininote key use work                   # switch active key
+mininote key current                    # view current active key
+mininote key rm ai-agent                # remove a stored key
 ```
 
 For temporary sessions or CI, set `export MININOTE_RPC_KEY="mnk_..."` or pass `--token` / `-t` directly. You can also select a specific key per-command using `--key <name>` / `-k <name>`.
@@ -87,7 +88,7 @@ Output is indented JSON by default. Add `--compact` for single-line JSON.
 |---|---|
 | Flag Override | `--token` / `-t` flag (raw token) or `--key` / `-k` flag (named key from vault) |
 | Environment | `MININOTE_RPC_KEY` or `MININOTE_TOKEN` |
-| Key Vault | `~/.config/mininote/mininote.db` (managed via `mininote config`) |
+| Key Vault | `~/.config/mininote/mininote.db` (managed via `mininote key`) |
 | Output | `--compact` for single-line JSON |
 
 Precedence: `--token` flag > Environment variables > `--key` flag > Active vault key > Single stored key fallback.
