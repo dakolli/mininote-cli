@@ -39,7 +39,7 @@ var (
 func init() {
 	rootCmd.AddGroup(&cobra.Group{
 		ID:    "services",
-		Title: "RPC Services:",
+		Title: "Mininote API:",
 	})
 	rootCmd.AddGroup(&cobra.Group{
 		ID:    "management",
