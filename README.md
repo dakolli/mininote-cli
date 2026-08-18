@@ -27,22 +27,45 @@ Prebuilt binaries for Linux, macOS, and Windows are available on [GitHub Release
 
 ## Setup
 
-Grab a workspace API key (`mnk_...`) with REST/RPC API access enabled from your workspace settings and save it:
+Grab a workspace API key (`mnk_...`) with REST/RPC or MCP access enabled from your workspace settings and save it:
 
 ```sh
-mininote config add-token mnk_... --name primary
+mininote config add-token mnk_... --name primary --type multi
 ```
 
-The key is saved in the local key vault at `~/.config/mininote/mininote.db` with user-only permissions (`0600`). You can store multiple named keys (RPC or MCP) and switch between them:
+The key is saved in the local key vault at `~/.config/mininote/mininote.db` with user-only permissions (`0600`). You can store multiple named keys by purpose (`--type rpc`, `--type mcp`, or `--type multi`) and switch between them:
 
 ```sh
-mininote config add-token mnk_... --name work --workspace WORK
+mininote config add-token mnk_... --name work --type rpc --workspace WORK
+mininote config add-token mnk_... --name ai-agent --type mcp
 mininote config list-tokens             # list all stored keys
 mininote config use work                # switch active key
 mininote config current                 # view current active key
 ```
 
 For temporary sessions or CI, set `export MININOTE_RPC_KEY="mnk_..."` or pass `--token` / `-t` directly. You can also select a specific key per-command using `--key <name>` / `-k <name>`.
+
+## AI Coding Agent (MCP) Setup
+
+`mininote` can automatically register the remote [MiniNote MCP Server](https://mininote.ink/mcp) into your AI coding harnesses using your stored credentials:
+
+```sh
+# Claude (Claude Code)
+mininote mcp claude
+
+# OpenCode
+mininote mcp opencode               # global (~/.config/opencode/opencode.jsonc)
+mininote mcp opencode --local       # local project (./opencode.json)
+
+# CodeX
+mininote mcp codex
+
+# Google Antigravity
+mininote mcp antigravity            # global (~/.gemini/config/mcp_config.json)
+mininote mcp antigravity --local    # workspace (./.agents/mcp_config.json)
+```
+
+> **Tip**: Use `--dry-run` to preview commands/configs before applying, or `--name <name>` to customize the registered server identifier.
 
 ## Quick Start
 
